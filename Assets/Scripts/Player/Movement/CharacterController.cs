@@ -81,13 +81,15 @@ public class PlayerController : MonoBehaviour
 
     private void TurnCharacter(Vector2 lookInput)
     {
+        // Yaw (player)
         float yaw = lookInput.x * mouseSensitivity * Time.deltaTime;
-        transform.Rotate(Vector3.up * yaw); // Player yaw
+        transform.Rotate(Vector3.up * yaw);
 
+        // Pitch (camera pivot)
         pitch -= lookInput.y * mouseSensitivity * Time.deltaTime;
         pitch = Mathf.Clamp(pitch, pitchMin, pitchMax);
 
-        cameraPivot.transform.localRotation = Quaternion.Euler(pitch, 0f, 0f); // Camera pitch
+        cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
 
 }

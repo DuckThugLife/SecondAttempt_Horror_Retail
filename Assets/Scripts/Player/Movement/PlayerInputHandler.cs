@@ -6,6 +6,7 @@ public class PlayerInputHandler : MonoBehaviour
 {
     // Expose input values
     public Vector2 Move { get; private set; }
+    public Vector2 Look { get; private set; }
     public bool JumpPressed { get; private set; }
     public Key LastKeyPressed { get; private set; }
 
@@ -24,10 +25,7 @@ public class PlayerInputHandler : MonoBehaviour
 
     public void OnLook(InputAction.CallbackContext context)
     {
-        if (context.performed)
-        {
-            Debug.Log("LOOKED");
-        }
+        Look = context.ReadValue<Vector2>();
     }
 
     public void OnAnyKey(InputAction.CallbackContext context)

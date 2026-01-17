@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(PlayerInputHandler))]
 public class PlayerController : MonoBehaviour
 {
     [Header("Components")]
@@ -11,6 +12,21 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float walkSpeed = 5f;
     [SerializeField] private float jumpPower = 5f;
     [SerializeField] private float gravity = -9.81f;
+
+    [SerializeField] private float lookSensitivity = 120f;
+    [SerializeField] private float lookSmoothTime = 0.05f;
+
+    private Vector2 currentLook;
+    private Vector2 lookVelocity;
+
+    [SerializeField] private Transform cameraPivot;
+    [SerializeField] private Transform cameraTransform;
+
+    [SerializeField] private float mouseSensitivity = 120f;
+    [SerializeField] private float pitchMin = -60f;
+    [SerializeField] private float pitchMax = 75f;
+
+    private float pitch;
 
     private float verticalVelocity = 0f;
 
@@ -23,10 +39,13 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         Vector2 moveInput = inputHandler.Move;
+        Vector2 lookInput = inputHandler.Look;
         bool jump = inputHandler.JumpPressed; // only true the frame button is pressed
+        
 
         HandleJump(jump);
         MoveCharacter(moveInput);
+        TurnCharacter(lookInput);
     }
 
     private void HandleJump(bool jump)
@@ -59,4 +78,16 @@ public class PlayerController : MonoBehaviour
         // Move character
         characterController.Move(move * Time.deltaTime);
     }
+
+    private void TurnCharacter(Vector2 lookInput)
+    {
+        float yaw = lookInput.x * mouseSensitivity * Time.deltaTime;
+        transform.Rotate(Vector3.up * yaw); // Player yaw
+
+        pitch -= lookInput.y * mouseSensitivity * Time.deltaTime;
+        pitch = Mathf.Clamp(pitch, pitchMin, pitchMax);
+
+        cameraPivot.transform.localRotation = Quaternion.Euler(pitch, 0f, 0f); // Camera pitch
+    }
+
 }

@@ -1,6 +1,7 @@
 using Unity.Netcode;
 using UnityEngine;
 
+[RequireComponent(typeof(PlayerController), typeof(PlayerInputHandler), typeof(Camera))]
 public class LocalPlayerRuntimeSetup : NetworkBehaviour
 {
     [Header("Local-only components")]

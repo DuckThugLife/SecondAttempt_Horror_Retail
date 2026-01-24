@@ -5,9 +5,11 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(PlayerInputHandler))]
 public class PlayerController : NetworkBehaviour
 {
-    [Header("Components")]
-    private CharacterController characterController;
-    private PlayerInputHandler inputHandler;
+    
+    [Header("Class References")]
+    [SerializeField] private CharacterController characterController;
+    [SerializeField] private PlayerInputHandler inputHandler;
+
 
     [Header("Variables")]
     [SerializeField] private float walkSpeed = 5f;
@@ -23,11 +25,7 @@ public class PlayerController : NetworkBehaviour
     private float pitch;
     private float verticalVelocity = 0f;
 
-    void Awake()
-    {
-        inputHandler = GetComponent<PlayerInputHandler>();
-        characterController = GetComponent<CharacterController>();
-    }
+
 
     void Update()
     {

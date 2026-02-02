@@ -379,6 +379,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7edfdafa3e5f8e24f9e473eafa9984fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  PlayerController: {fileID: 3412940113391116781}
+  PlayerInputHandler: {fileID: 1160765340064647956}
 --- !u!143 &6108898153566385600
 CharacterController:
   m_ObjectHideFlags: 0

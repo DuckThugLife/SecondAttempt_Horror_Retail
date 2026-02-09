@@ -1,10 +1,10 @@
 public abstract class PlayerState
 {
-    protected readonly PlayerStateMachine Machine;
+    protected readonly PlayerStateMachine stateMachine;
 
     protected PlayerState(PlayerStateMachine machine)
     {
-        Machine = machine;
+        stateMachine = machine;
     }
 
     public virtual void Enter() { }

@@ -17,6 +17,7 @@ public class PlayerStateMachine : NetworkBehaviour
     public PlayerAliveState AliveState { get; private set; }
     public PlayerDeadState DeadState { get; private set; }
     public PlayerUIState UIState { get; private set; }
+    public PlayerLoadingState LoadingState { get; private set; }
 
     private void Awake()
     {
@@ -24,6 +25,7 @@ public class PlayerStateMachine : NetworkBehaviour
         AliveState = new PlayerAliveState(this);
         DeadState = new PlayerDeadState(this);
         UIState = new PlayerUIState(this);
+        LoadingState = new PlayerLoadingState(this);
     }
 
     public override void OnNetworkSpawn()

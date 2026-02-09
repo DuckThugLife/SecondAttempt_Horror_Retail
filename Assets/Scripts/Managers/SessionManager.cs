@@ -4,128 +4,158 @@ using Unity.Netcode;
 using Unity.Services.Multiplayer;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using TMPro;
-using UnityEngine.UI;
 
 public class SessionManager : MonoBehaviour
 {
-    [Header("UI References")]
-    [SerializeField] private TMP_InputField joinCodeField; // Input AND Display
-    [SerializeField] private Button copyButton;           // Hidden until code exists
-    [SerializeField] private GameObject loadingOverlay;
+    public static SessionManager Instance { get; private set; }
+
+    public event Action<ISession> OnSessionCreated;
+    public event Action<bool> OnBusyChanged;
 
     private ISession _currentSession;
     private bool _isBusy;
 
-    // --- SOLO GAME LOGIC ---
+    private void Awake()
+    {
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
+    private void Start()
+    {
+        NetBootstrap.OnServicesInitialized += HandleServicesReady;
+    }
+
+    // --------------------
+    // SOLO
+    // --------------------
+
     public void StartSoloGame()
     {
         if (_isBusy || NetworkManager.Singleton.IsListening) return;
 
-        // Solo doesn't need Unity Services; it just starts the local engine
-        if (NetworkManager.Singleton.StartHost())
-        {
-            Debug.Log("Solo game started.");
-            StartGameForAllPlayers();
-        }
+        NetworkManager.Singleton.StartHost();
+        StartGameForAllPlayers();
     }
 
-    // --- MULTIPLAYER HOST LOGIC ---
-    public async void HostSession(int maxPlayers = 4)
+    // --------------------
+    // HOST
+    // --------------------
+
+    public async Task HostSessionAsync(int maxPlayers = 4)
     {
         if (_isBusy || !NetBootstrap.IsInitialized) return;
 
-        // Ensure NetworkManager is totally clean before starting
-        if (NetworkManager.Singleton.IsListening) NetworkManager.Singleton.Shutdown();
+        SetBusy(true);
 
-        SetLoadingState(true);
         try
         {
-            var options = new SessionOptions { MaxPlayers = maxPlayers }.WithRelayNetwork();
+            if (NetworkManager.Singleton.IsListening)
+                NetworkManager.Singleton.Shutdown();
 
-            // This call often triggers NetworkManager.StartHost() automatically
-            _currentSession = await MultiplayerService.Instance.CreateSessionAsync(options);
+            var options = new SessionOptions
+            {
+                MaxPlayers = maxPlayers
+            }.WithRelayNetwork();
 
-            // FIX: Only call StartHost manually if the SDK didn't already start it
+            _currentSession =
+                await MultiplayerService.Instance.CreateSessionAsync(options);
+
             if (!NetworkManager.Singleton.IsListening)
-            {
                 NetworkManager.Singleton.StartHost();
-            }
 
-            // Update UI with the new code
-            if (_currentSession != null)
-            {
-                joinCodeField.text = _currentSession.Code;
-                joinCodeField.interactable = false;
-                if (copyButton != null) copyButton.gameObject.SetActive(true);
-            }
+            OnSessionCreated?.Invoke(_currentSession);
         }
         catch (Exception e)
         {
             Debug.LogError($"Host Session Failed: {e.Message}");
             _currentSession = null;
         }
-        finally { SetLoadingState(false); }
+        finally
+        {
+            SetBusy(false);
+        }
     }
 
-    // --- MULTIPLAYER JOIN LOGIC ---
-    public async void JoinSessionFromUI()
-    {
-        if (joinCodeField == null) return;
-        await JoinSession(joinCodeField.text.Trim());
-    }
+    // --------------------
+    // JOIN
+    // --------------------
 
-    public async Task JoinSession(string code)
+    public async Task JoinSessionAsync(string code)
     {
-        if (_isBusy || string.IsNullOrEmpty(code) || NetworkManager.Singleton.IsListening) return;
+        if (_isBusy || string.IsNullOrWhiteSpace(code)) return;
+        if (NetworkManager.Singleton.IsListening) return;
 
-        SetLoadingState(true);
+        SetBusy(true);
+
         try
         {
-            _currentSession = await MultiplayerService.Instance.JoinSessionByCodeAsync(code);
+            _currentSession =
+                await MultiplayerService.Instance.JoinSessionByCodeAsync(code);
 
-            // Similar to Host, join might auto-start. Check first.
             if (!NetworkManager.Singleton.IsListening)
-            {
                 NetworkManager.Singleton.StartClient();
-            }
-
-            joinCodeField.interactable = false;
         }
-        catch (Exception e) { Debug.LogError($"Join failed: {e.Message}"); }
-        finally { SetLoadingState(false); }
+        catch (Exception e)
+        {
+            Debug.LogError($"Join failed: {e.Message}");
+        }
+        finally
+        {
+            SetBusy(false);
+        }
     }
 
-    // --- UTILITIES ---
+    // --------------------
+    // GAME FLOW
+    // --------------------
+
     public void StartGameForAllPlayers()
     {
         if (!NetworkManager.Singleton.IsHost) return;
-        // Use NetworkSceneManager to sync all clients
-        NetworkManager.Singleton.SceneManager.LoadScene("GameScene", LoadSceneMode.Single);
+
+        NetworkManager.Singleton.SceneManager.LoadScene(
+            "GameScene",
+            LoadSceneMode.Single
+        );
     }
 
-    public void CopyCodeToClipboard()
+    public async Task LeaveSessionAsync()
     {
-        if (joinCodeField == null || string.IsNullOrEmpty(joinCodeField.text)) return;
-        GUIUtility.systemCopyBuffer = joinCodeField.text;
+        SetBusy(true);
+
+        try
+        {
+            if (_currentSession != null)
+                await _currentSession.LeaveAsync();
+
+            if (NetworkManager.Singleton != null)
+                NetworkManager.Singleton.Shutdown();
+        }
+        finally
+        {
+            _currentSession = null;
+            SetBusy(false);
+            SceneManager.LoadScene("LobbyScene");
+        }
     }
 
-    private void SetLoadingState(bool busy)
+    // --------------------
+    // INTERNAL
+    // --------------------
+
+    private void SetBusy(bool value)
     {
-        _isBusy = busy;
-        if (loadingOverlay != null) loadingOverlay.SetActive(busy);
+        _isBusy = value;
+        OnBusyChanged?.Invoke(value);
     }
 
-    public async void LeaveSession()
+    private void HandleServicesReady()
     {
-        if (_currentSession != null) await _currentSession.LeaveAsync();
-        if (NetworkManager.Singleton != null) NetworkManager.Singleton.Shutdown();
-
-        // Reset UI for next time
-        joinCodeField.text = "";
-        joinCodeField.interactable = true;
-        if (copyButton != null) copyButton.gameObject.SetActive(false);
-
         SceneManager.LoadScene("LobbyScene");
     }
 }

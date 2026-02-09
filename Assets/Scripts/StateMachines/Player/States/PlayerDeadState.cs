@@ -5,12 +5,12 @@ public class PlayerDeadState : PlayerState
 
     public override void Enter()
     {
-        Machine.PlayerController.enabled = false;
+      stateMachine.PlayerInputHandler.SetGameplayInputEnabled(false);
         //Machine.LockCursor();
     }
 
     public override void Exit()
     {
-        Machine.PlayerController.enabled = false;
+        // Nothing for now
     }
 }

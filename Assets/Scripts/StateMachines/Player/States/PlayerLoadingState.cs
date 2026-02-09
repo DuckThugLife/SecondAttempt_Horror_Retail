@@ -1,16 +1,19 @@
 using UnityEngine;
-public class PlayerUIState : PlayerState
+public class PlayerLoadingState : PlayerState
 {
-    public PlayerUIState(PlayerStateMachine machine) : base(machine) { }
+    public PlayerLoadingState(PlayerStateMachine machine) : base(machine) { }
 
     public override void Enter()
     {
         stateMachine.PlayerInputHandler.SetGameplayInputEnabled(false);
         stateMachine.UnlockCursor();
+
+        
     }
 
     public override void Exit()
     {
-
+        
     }
+
 }

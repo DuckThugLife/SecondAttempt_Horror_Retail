@@ -1,17 +1,17 @@
-using UnityEngine;
 public class PlayerLobbyState : PlayerState
 {
     public PlayerLobbyState(PlayerStateMachine machine) : base(machine) { }
 
     public override void Enter()
     {
-        Machine.PlayerController.enabled = true;
-        Machine.LockCursor();
+        stateMachine.PlayerInputHandler.SetGameplayInputEnabled(true);
+        stateMachine.UnlockCursor();
+
+        UIManager.Instance.ShowLobbyUI();
     }
 
     public override void Exit()
     {
-        Machine.PlayerController.enabled = false;
-        Machine.PlayerInputHandler.enabled = false;
+        // Do nothing
     }
 }

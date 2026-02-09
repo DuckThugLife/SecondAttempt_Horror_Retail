@@ -5,12 +5,12 @@ public class PlayerAliveState : PlayerState
 
     public override void Enter()
     {
-        Machine.PlayerController.enabled = true;
-        Machine.LockCursor();
+        stateMachine.PlayerInputHandler.SetGameplayInputEnabled(true);
+        stateMachine.LockCursor();
     }
 
     public override void Exit()
     {
-        Machine.PlayerController.enabled = false;
+       
     }
 }

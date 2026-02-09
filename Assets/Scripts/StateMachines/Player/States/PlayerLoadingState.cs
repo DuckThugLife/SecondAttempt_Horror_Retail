@@ -5,10 +5,8 @@ public class PlayerLoadingState : PlayerState
 
     public override void Enter()
     {
-        stateMachine.PlayerInputHandler.SetGameplayInputEnabled(false);
+        stateMachine.PlayerInputHandler.SetMovementEnabled(false); // full lock for loading
         stateMachine.UnlockCursor();
-
-        
     }
 
     public override void Exit()

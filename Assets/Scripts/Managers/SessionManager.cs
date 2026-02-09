@@ -12,6 +12,9 @@ public class SessionManager : MonoBehaviour
     public event Action<ISession> OnSessionCreated;
     public event Action<bool> OnBusyChanged;
 
+
+
+
     private ISession _currentSession;
     private bool _isBusy;
 
@@ -71,6 +74,9 @@ public class SessionManager : MonoBehaviour
 
             if (!NetworkManager.Singleton.IsListening)
                 NetworkManager.Singleton.StartHost();
+
+            // Update the join code field for the host
+            UIManager.Instance.UpdateSessionCode(_currentSession);
 
             OnSessionCreated?.Invoke(_currentSession);
         }

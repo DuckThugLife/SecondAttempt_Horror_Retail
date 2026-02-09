@@ -1,7 +1,7 @@
 using TMPro;
-using Unity.Services.Multiplayer;
 using UnityEngine;
 using UnityEngine.UI;
+using Unity.Services.Multiplayer;
 
 public class UIManager : MonoBehaviour
 {
@@ -9,11 +9,14 @@ public class UIManager : MonoBehaviour
 
     [Header("Lobby UI")]
     [SerializeField] private GameObject lobbyRootGO;
-    [SerializeField] private TMP_InputField joinCodeField;
+    [SerializeField] private TMP_InputField joinInputField;   // Player enters a code here
+    [SerializeField] private TMP_Text joinCodeText;           // Shows host session code
     [SerializeField] private Button copyButton;
 
     [Header("Game UI")]
     [SerializeField] private GameObject gameRootGO;
+    [SerializeField] private GameObject hoverIconGO;
+    [SerializeField] private GameObject crosshairGO;
 
     [Header("Overlays")]
     [SerializeField] private GameObject loadingOverlay;
@@ -25,7 +28,6 @@ public class UIManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
         Instance = this;
     }
 
@@ -59,21 +61,38 @@ public class UIManager : MonoBehaviour
     {
         if (session == null) return;
 
-        joinCodeField.text = session.Code;
-        joinCodeField.interactable = false;
+        joinCodeText.text = $"Join Code: {session.Code}";
         copyButton.gameObject.SetActive(true);
     }
 
     public void ClearSessionCode()
     {
-        joinCodeField.text = string.Empty;
-        joinCodeField.interactable = true;
+        joinCodeText.text = "Join Code:";
         copyButton.gameObject.SetActive(false);
     }
 
     public void CopyJoinCode()
     {
-        if (string.IsNullOrEmpty(joinCodeField.text)) return;
-        GUIUtility.systemCopyBuffer = joinCodeField.text;
+        if (string.IsNullOrEmpty(joinCodeText.text)) return;
+
+        // Remove the "Join Code: " prefix before copying
+        string code = joinCodeText.text.Replace("Join Code: ", "");
+        GUIUtility.systemCopyBuffer = code;
+    }
+
+    // --------------------
+    // HOVER / CROSSHAIR
+    // --------------------
+
+    public void HoverUI()
+    {
+        hoverIconGO.SetActive(true);
+        crosshairGO.SetActive(false);
+    }
+
+    public void UnHoverUI()
+    {
+        hoverIconGO.SetActive(false);
+        crosshairGO.SetActive(true);
     }
 }

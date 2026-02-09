@@ -1,16 +1,27 @@
-using UnityEngine;
+using UnityEngine.InputSystem;
+
 public class PlayerUIState : PlayerState
 {
     public PlayerUIState(PlayerStateMachine machine) : base(machine) { }
 
     public override void Enter()
     {
-        stateMachine.PlayerInputHandler.SetGameplayInputEnabled(false);
-        stateMachine.UnlockCursor();
+        stateMachine.PlayerInputHandler.SetMovementEnabled(false); // only movement blocked
+        stateMachine.UnlockCursor(); // unlocks AND makes cursor visible
     }
 
     public override void Exit()
     {
+        stateMachine.PlayerInputHandler.SetMovementEnabled(true);
+        stateMachine.LockCursor();   // locks AND hides cursor
+    }
 
+    public override void Tick()
+    {
+        if (stateMachine.PlayerInputHandler.LastKeyPressed == Key.Escape)
+        {
+            stateMachine.RevertToPreviousState();  // go back to whatever state was active
+            stateMachine.PlayerInputHandler.ResetLastKey();
+        }
     }
 }

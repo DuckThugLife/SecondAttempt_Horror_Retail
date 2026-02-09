@@ -9,45 +9,46 @@ public class PlayerInputHandler : MonoBehaviour
     public bool JumpPressed { get; private set; }
     public Key LastKeyPressed { get; private set; }
 
-    private bool gameplayInputEnabled = true;
+    private bool movementEnabled = true;
 
-    public void SetGameplayInputEnabled(bool enabled)
+    public void SetMovementEnabled(bool enabled)
     {
-        gameplayInputEnabled = enabled;
-
+        movementEnabled = enabled;
         if (!enabled)
         {
             Move = Vector2.zero;
-            Look = Vector2.zero;
             JumpPressed = false;
         }
     }
 
     public void OnMove(InputAction.CallbackContext context)
     {
-        if (!gameplayInputEnabled) return;
+        if (!movementEnabled) return;
         Move = context.ReadValue<Vector2>();
     }
 
     public void OnJump(InputAction.CallbackContext context)
     {
-        if (!gameplayInputEnabled) return;
-
-        if (context.performed) JumpPressed = true;
-        else if (context.canceled) JumpPressed = false;
+        if (!movementEnabled) return;
+        JumpPressed = context.performed;
     }
 
     public void OnLook(InputAction.CallbackContext context)
     {
-        if (!gameplayInputEnabled) return;
-        Look = context.ReadValue<Vector2>();
+        Look = context.ReadValue<Vector2>(); // always active for UI/cursor
     }
 
     public void OnAnyKey(InputAction.CallbackContext context)
     {
-        if (!gameplayInputEnabled) return;
-
         if (context.performed && context.control is KeyControl keyControl)
-            LastKeyPressed = keyControl.keyCode;
+            LastKeyPressed = keyControl.keyCode; // always active
     }
+
+    public void OnCancel(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+            LastKeyPressed = Key.Escape; // maps ESC key press to LastKeyPressed
+    }
+
+    public void ResetLastKey() => LastKeyPressed = Key.None;
 }

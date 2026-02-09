@@ -1,10 +1,13 @@
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Playables;
 
 public class PlayerStateMachine : NetworkBehaviour
 {
+    //  track states
     private PlayerState _currentState;
+    private PlayerState _previousState; 
 
     [SerializeField] public PlayerController PlayerController;
     [SerializeField] public PlayerInputHandler PlayerInputHandler;
@@ -47,17 +50,31 @@ public class PlayerStateMachine : NetworkBehaviour
         if (_currentState == newState) return;
 
         _currentState?.Exit();
+
+        _previousState = _currentState;
         _currentState = newState;
         _currentState.Enter();
     }
 
+    // Lock & hide the cursor for gameplay
     public void LockCursor()
     {
         Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
+    // Unlock & show the cursor for UI
     public void UnlockCursor()
     {
         Cursor.lockState = CursorLockMode.Confined;
+        Cursor.visible = true;
     }
+
+    public void RevertToPreviousState()
+    {
+        if (_previousState != null)
+            ChangeState(_previousState);
+    }
+
+
 }

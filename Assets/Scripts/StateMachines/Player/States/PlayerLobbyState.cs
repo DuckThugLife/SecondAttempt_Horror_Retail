@@ -4,10 +4,10 @@ public class PlayerLobbyState : PlayerState
 
     public override void Enter()
     {
+        UIManager.Instance.ShowGameUI();
         stateMachine.PlayerInputHandler.SetGameplayInputEnabled(true);
-        stateMachine.UnlockCursor();
-
-        UIManager.Instance.ShowLobbyUI();
+        stateMachine.LockCursor();
+       
     }
 
     public override void Exit()

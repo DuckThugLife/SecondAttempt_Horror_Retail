@@ -25,9 +25,14 @@ public class SessionManager : MonoBehaviour
         Instance = this;
     }
 
-    private void Start()
+    private void OnEnable()
     {
         NetBootstrap.OnServicesInitialized += HandleServicesReady;
+    }
+
+    private void OnDisable()
+    {
+        NetBootstrap.OnServicesInitialized -= HandleServicesReady;
     }
 
     // --------------------
@@ -37,7 +42,6 @@ public class SessionManager : MonoBehaviour
     public void StartSoloGame()
     {
         if (_isBusy || NetworkManager.Singleton.IsListening) return;
-
         NetworkManager.Singleton.StartHost();
         StartGameForAllPlayers();
     }
@@ -141,8 +145,7 @@ public class SessionManager : MonoBehaviour
             _currentSession = null;
             SetBusy(false);
             SceneManager.LoadScene("LobbyScene");
-        }
-    }
+        }    }
 
     // --------------------
     // INTERNAL
@@ -154,8 +157,9 @@ public class SessionManager : MonoBehaviour
         OnBusyChanged?.Invoke(value);
     }
 
-    private void HandleServicesReady()
+    private async void HandleServicesReady()
     {
         SceneManager.LoadScene("LobbyScene");
+        await HostSessionAsync();
     }
 }

@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Services.Multiplayer;
+using Mono.Cecil.Cil;
 
 public class UIManager : MonoBehaviour
 {
@@ -78,6 +79,11 @@ public class UIManager : MonoBehaviour
         // Remove the "Join Code: " prefix before copying
         string code = joinCodeText.text.Replace("Join Code: ", "");
         GUIUtility.systemCopyBuffer = code;
+    }
+
+    public void JoinSessionWithCode()
+    {
+        _ = SessionManager.Instance.JoinSessionAsync(joinInputField.text); 
     }
 
     // --------------------

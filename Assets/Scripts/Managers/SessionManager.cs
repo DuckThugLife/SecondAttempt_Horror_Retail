@@ -26,6 +26,7 @@ public class SessionManager : MonoBehaviour
             return;
         }
         Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     private void OnEnable()
@@ -95,24 +96,83 @@ public class SessionManager : MonoBehaviour
     // JOIN
     // --------------------
 
-    public async Task JoinSessionAsync(string code)
+
+    public async Task JoinSessionAsync(string newCode)
     {
-        if (_isBusy || string.IsNullOrWhiteSpace(code)) return;
-        if (NetworkManager.Singleton.IsListening) return;
+        if (_isBusy || string.IsNullOrWhiteSpace(newCode)) return;
+
+        // Validate join code format
+        if (!System.Text.RegularExpressions.Regex.IsMatch(newCode, @"^[A-Z0-9]{6}$"))
+        {
+            Debug.LogError($"Invalid code format: {newCode}");
+            return;
+        }
 
         SetBusy(true);
 
+        string oldCode = _currentSession?.Code;
+        ISession oldSession = _currentSession;
+
+        // Leave current session safely
+        if (_currentSession != null)
+        {
+            try
+            {
+                await _currentSession.LeaveAsync();
+            }
+            catch (Exception leaveEx)
+            {
+                Debug.LogWarning($"Failed to leave session: {leaveEx.Message}");
+            }
+
+            _currentSession = null;
+
+            if (NetworkManager.Singleton.IsListening)
+                NetworkManager.Singleton.Shutdown();
+        }
+
         try
         {
-            _currentSession =
-                await MultiplayerService.Instance.JoinSessionByCodeAsync(code);
+            // Attempt to join the new session
+            _currentSession = await MultiplayerService.Instance.JoinSessionByCodeAsync(newCode);
 
             if (!NetworkManager.Singleton.IsListening)
                 NetworkManager.Singleton.StartClient();
+
+            Debug.Log("Successfully joined new session!");
+            // Stay in LobbyScene; UI should update automatically
         }
-        catch (Exception e)
+        catch (Exception joinEx)
         {
-            Debug.LogError($"Join failed: {e.Message}");
+            Debug.LogWarning($"Failed to join new session ({newCode}): {joinEx.Message}");
+
+            // Small delay to reduce "Too Many Requests"
+            await Task.Delay(1000);
+
+            // Attempt to rejoin the old session
+            if (!string.IsNullOrEmpty(oldCode))
+            {
+                try
+                {
+                    _currentSession = await MultiplayerService.Instance.JoinSessionByCodeAsync(oldCode);
+
+                    if (!NetworkManager.Singleton.IsListening)
+                        NetworkManager.Singleton.StartClient();
+
+                    Debug.Log("Rejoined previous session.");
+                    // Stay in LobbyScene
+                    return;
+                }
+                catch (Exception oldJoinEx)
+                {
+                    Debug.LogWarning($"Failed to rejoin previous session ({oldCode}): {oldJoinEx.Message}");
+                }
+            }
+
+            // Final fallback: host a new session
+            Debug.Log("Hosting new session as fallback.");
+            await HostSessionAsync();
+            // LobbyScene remains active by default
         }
         finally
         {
@@ -151,7 +211,8 @@ public class SessionManager : MonoBehaviour
             _currentSession = null;
             SetBusy(false);
             SceneManager.LoadScene("LobbyScene");
-        }    }
+        }   
+    }
 
     // --------------------
     // INTERNAL

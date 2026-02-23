@@ -4885,6 +4885,34 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 6810620785166626264}
+    - target: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: JoinSessionWithCode
+      objectReference: {fileID: 0}
+    - target: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: UIManager, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_IntArgument
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 2067233391475796663, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
       propertyPath: m_text
       value: 'JOIN CODE:'
@@ -5034,6 +5062,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &4068421308227110860 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+  m_PrefabInstance: {fileID: 4068421308227110857}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &6810620785166626263
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5050,6 +5089,10 @@ PrefabInstance:
       propertyPath: gameRootGO
       value: 
       objectReference: {fileID: 554607803}
+    - target: {fileID: 2952741230272579230, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
+      propertyPath: joinButton
+      value: 
+      objectReference: {fileID: 4068421308227110860}
     - target: {fileID: 2952741230272579230, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
       propertyPath: crosshairGO
       value: 

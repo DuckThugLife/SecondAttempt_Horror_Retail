@@ -11,6 +11,7 @@ public class SessionManager : MonoBehaviour
     public static SessionManager Instance { get; private set; }
 
     public event Action<ISession> OnSessionCreated;
+    public event Action<ISession> OnSessionJoined;
     public event Action<bool> OnBusyChanged;
 
     private ISession _currentSession;
@@ -51,6 +52,18 @@ public class SessionManager : MonoBehaviour
 
     #endregion
 
+    #region UI Helpers
+
+    private void UpdateSessionCodeInUI()
+    {
+        if (UIManager.Instance != null && _currentSession != null)
+        {
+            UIManager.Instance.UpdateSessionCode(_currentSession);
+        }
+    }
+
+    #endregion
+
     #region Solo Mode
 
     public void StartSoloGame()
@@ -79,7 +92,7 @@ public class SessionManager : MonoBehaviour
             _currentSession = await CreateNewSessionAsync(maxPlayers);
             StartHostIfNeeded();
 
-            UIManager.Instance.UpdateSessionCode(_currentSession);
+            UpdateSessionCodeInUI();
             OnSessionCreated?.Invoke(_currentSession);
         }
         catch (Exception e)
@@ -196,6 +209,9 @@ public class SessionManager : MonoBehaviour
         if (!NetworkManager.Singleton.IsListening)
             NetworkManager.Singleton.StartClient();
 
+        UpdateSessionCodeInUI();
+        OnSessionJoined?.Invoke(_currentSession); // Using the new event for joins
+
         Debug.Log("Successfully joined new session!");
     }
 
@@ -222,6 +238,9 @@ public class SessionManager : MonoBehaviour
 
             if (!NetworkManager.Singleton.IsListening)
                 NetworkManager.Singleton.StartClient();
+
+            UpdateSessionCodeInUI();
+            OnSessionJoined?.Invoke(_currentSession); // Rejoin is still "joining" an existing session
 
             Debug.Log("Rejoined previous session.");
             return true;

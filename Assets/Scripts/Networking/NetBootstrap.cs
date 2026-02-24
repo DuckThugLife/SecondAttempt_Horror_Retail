@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.SceneManagement; // Required for swapping scenes
+using UnityEngine.SceneManagement;
 using Unity.Services.Core;
 using Unity.Services.Authentication;
 
@@ -32,11 +32,19 @@ public class NetBootstrap : MonoBehaviour
                 await AuthenticationService.Instance.SignInAnonymouslyAsync();
 
             IsInitialized = true;
+
+            // Fire the event for any already-subscribed listeners
             OnServicesInitialized?.Invoke();
         }
         catch (System.Exception e)
         {
             Debug.LogError($"Service Init Failed: {e.Message}");
         }
+    }
+
+    private void OnDestroy()
+    {
+        // Clear the event to prevent memory leaks
+        OnServicesInitialized = null;
     }
 }

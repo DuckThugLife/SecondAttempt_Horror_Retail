@@ -5062,17 +5062,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &4068421308227110860 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-  m_PrefabInstance: {fileID: 4068421308227110857}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &6810620785166626263
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5081,46 +5070,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2952741230272579230, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
-      propertyPath: copyButton
-      value: 
-      objectReference: {fileID: 1716262543}
-    - target: {fileID: 2952741230272579230, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
-      propertyPath: gameRootGO
-      value: 
-      objectReference: {fileID: 554607803}
-    - target: {fileID: 2952741230272579230, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
-      propertyPath: joinButton
-      value: 
-      objectReference: {fileID: 4068421308227110860}
-    - target: {fileID: 2952741230272579230, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
-      propertyPath: crosshairGO
-      value: 
-      objectReference: {fileID: 4068421308227110858}
-    - target: {fileID: 2952741230272579230, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
-      propertyPath: hoverIconGO
-      value: 
-      objectReference: {fileID: 1029430769}
-    - target: {fileID: 2952741230272579230, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
-      propertyPath: lobbyRootGO
-      value: 
-      objectReference: {fileID: 1344301263}
-    - target: {fileID: 2952741230272579230, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
-      propertyPath: joinCodeText
-      value: 
-      objectReference: {fileID: 4068421308227110859}
-    - target: {fileID: 2952741230272579230, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
-      propertyPath: joinCodeField
-      value: 
-      objectReference: {fileID: 490990633}
-    - target: {fileID: 2952741230272579230, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
-      propertyPath: joinInputField
-      value: 
-      objectReference: {fileID: 490990633}
-    - target: {fileID: 2952741230272579230, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
-      propertyPath: loadingOverlay
-      value: 
-      objectReference: {fileID: 1928284022}
     - target: {fileID: 4986509084301225971, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
       propertyPath: m_LocalPosition.x
       value: -7.3016667
@@ -5161,10 +5110,42 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5258864269948342293, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
+      propertyPath: copyButton
+      value: 
+      objectReference: {fileID: 1716262543}
+    - target: {fileID: 5258864269948342293, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
+      propertyPath: lobbyRootGO
+      value: 
+      objectReference: {fileID: 1344301263}
+    - target: {fileID: 5258864269948342293, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
+      propertyPath: joinCodeText
+      value: 
+      objectReference: {fileID: 4068421308227110859}
+    - target: {fileID: 5258864269948342293, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
+      propertyPath: joinInputField
+      value: 
+      objectReference: {fileID: 490990633}
+    - target: {fileID: 5258864269948342293, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
+      propertyPath: loadingOverlay
+      value: 
+      objectReference: {fileID: 1928284022}
     - target: {fileID: 7132753078233881411, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
       propertyPath: m_Name
       value: UIManager
       objectReference: {fileID: 0}
+    - target: {fileID: 7503072220314770964, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
+      propertyPath: gameRootGO
+      value: 
+      objectReference: {fileID: 554607803}
+    - target: {fileID: 7503072220314770964, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
+      propertyPath: crosshairGO
+      value: 
+      objectReference: {fileID: 4068421308227110858}
+    - target: {fileID: 7503072220314770964, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
+      propertyPath: hoverIconGO
+      value: 
+      objectReference: {fileID: 1029430769}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

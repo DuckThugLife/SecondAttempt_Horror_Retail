@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4986509084301225971}
   - component: {fileID: 2952741230272579230}
+  - component: {fileID: 5258864269948342293}
+  - component: {fileID: 7503072220314770964}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -44,8 +46,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4517701f801525642ac002f26dd10a6e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  <SessionUIManager>k__BackingField: {fileID: 5258864269948342293}
+  <GameUIManager>k__BackingField: {fileID: 7503072220314770964}
+--- !u!114 &5258864269948342293
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7132753078233881411}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3afe71fc02daf854e96fa9af498f721f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
   lobbyRootGO: {fileID: 0}
-  joinCodeField: {fileID: 0}
+  joinInputField: {fileID: 0}
+  joinCodeText: {fileID: 0}
   copyButton: {fileID: 0}
-  gameRootGO: {fileID: 0}
   loadingOverlay: {fileID: 0}
+--- !u!114 &7503072220314770964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7132753078233881411}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 891bd5c4eaeb8b640845cf7de4a1e42e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameRootGO: {fileID: 0}
+  hoverIconGO: {fileID: 0}
+  crosshairGO: {fileID: 0}

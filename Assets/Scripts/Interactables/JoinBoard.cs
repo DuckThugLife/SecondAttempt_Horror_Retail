@@ -8,14 +8,14 @@ public class JoinBoard : MonoBehaviour, IInteractable, IHoverable
     {
         if (_isHovered) return;
         _isHovered = true;
-        UIManager.Instance.HoverUI();
+        UIManager.Instance.GameUIManager.HoverUI();
     }
 
     public void HoverExit(Interactor interactor)
     {
         if (!_isHovered) return;
         _isHovered = false;
-        UIManager.Instance.UnHoverUI();
+        UIManager.Instance.GameUIManager.UnHoverUI();
     }
 
     public void Interact(Interactor interactor)
@@ -23,7 +23,8 @@ public class JoinBoard : MonoBehaviour, IInteractable, IHoverable
         if (!_isHovered) return;
 
         // Show the lobby UI
-        UIManager.Instance.ShowLobbyUI();
+        UIManager.Instance.SessionUIManager.ShowLobbyUI();
+        UIManager.Instance.GameUIManager.HideGameUI();
 
         // Switch the player into UI state
         interactor.StateMachine.ChangeState(interactor.StateMachine.UIState);

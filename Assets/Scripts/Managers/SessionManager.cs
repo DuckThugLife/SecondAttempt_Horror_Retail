@@ -33,6 +33,12 @@ public class SessionManager : MonoBehaviour
     private void OnEnable()
     {
         NetBootstrap.OnServicesInitialized += HandleServicesReady;
+
+        // If already initialized, handle it immediately
+        if (NetBootstrap.IsInitialized)
+        {
+            HandleServicesReady();
+        }
     }
 
     private void OnDisable()
@@ -46,6 +52,9 @@ public class SessionManager : MonoBehaviour
 
     private async void HandleServicesReady()
     {
+        // Small delay to ensure scene is loaded
+        await Task.Delay(100);
+
         SceneManager.LoadScene("LobbyScene");
         await HostSessionAsync();
     }
@@ -123,7 +132,6 @@ public class SessionManager : MonoBehaviour
 
     public async Task JoinSessionAsync(string newCode)
     {
-        // Remove the CanAttemptJoin blocking validation - only check busy/empty
         if (_isBusy)
         {
             Debug.LogError("Cannot join: Session manager is busy");
@@ -157,26 +165,6 @@ public class SessionManager : MonoBehaviour
         }
     }
 
-    // Keep CanAttemptJoin for logging but don't use it to block
-    private bool CanAttemptJoin(string code, out string error)
-    {
-        error = null;
-
-        if (_isBusy || string.IsNullOrWhiteSpace(code))
-        {
-            error = "Cannot join: Session manager is busy or code is empty";
-            return false;
-        }
-
-        if (!Regex.IsMatch(code, @"^[A-Z0-9]{6}$"))
-        {
-            error = $"Invalid code format: {code}";
-            return false;
-        }
-
-        return true;
-    }
-
     private async Task LeaveCurrentSessionIfAny()
     {
         if (_currentSession == null)
@@ -199,7 +187,6 @@ public class SessionManager : MonoBehaviour
 
     private async Task AttemptJoinNewSessionAsync(string newCode)
     {
-        // Validate format here - this will throw and trigger fallbacks
         if (!Regex.IsMatch(newCode, @"^[A-Z0-9]{6}$"))
         {
             throw new Exception("Invalid code format");

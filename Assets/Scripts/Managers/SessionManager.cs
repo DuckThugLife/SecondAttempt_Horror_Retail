@@ -52,18 +52,6 @@ public class SessionManager : MonoBehaviour
 
     #endregion
 
-    #region UI Helpers
-
-    private void UpdateSessionCodeInUI()
-    {
-        if (UIManager.Instance != null && _currentSession != null)
-        {
-            UIManager.Instance.UpdateSessionCode(_currentSession);
-        }
-    }
-
-    #endregion
-
     #region Solo Mode
 
     public void StartSoloGame()
@@ -92,7 +80,6 @@ public class SessionManager : MonoBehaviour
             _currentSession = await CreateNewSessionAsync(maxPlayers);
             StartHostIfNeeded();
 
-            UpdateSessionCodeInUI();
             OnSessionCreated?.Invoke(_currentSession);
         }
         catch (Exception e)
@@ -136,9 +123,16 @@ public class SessionManager : MonoBehaviour
 
     public async Task JoinSessionAsync(string newCode)
     {
-        if (!CanAttemptJoin(newCode, out string validationError))
+        // Remove the CanAttemptJoin blocking validation - only check busy/empty
+        if (_isBusy)
         {
-            Debug.LogError(validationError);
+            Debug.LogError("Cannot join: Session manager is busy");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newCode))
+        {
+            Debug.LogError("Cannot join: Code is empty");
             return;
         }
 
@@ -163,6 +157,7 @@ public class SessionManager : MonoBehaviour
         }
     }
 
+    // Keep CanAttemptJoin for logging but don't use it to block
     private bool CanAttemptJoin(string code, out string error)
     {
         error = null;
@@ -204,13 +199,18 @@ public class SessionManager : MonoBehaviour
 
     private async Task AttemptJoinNewSessionAsync(string newCode)
     {
+        // Validate format here - this will throw and trigger fallbacks
+        if (!Regex.IsMatch(newCode, @"^[A-Z0-9]{6}$"))
+        {
+            throw new Exception("Invalid code format");
+        }
+
         _currentSession = await MultiplayerService.Instance.JoinSessionByCodeAsync(newCode);
 
         if (!NetworkManager.Singleton.IsListening)
             NetworkManager.Singleton.StartClient();
 
-        UpdateSessionCodeInUI();
-        OnSessionJoined?.Invoke(_currentSession); // Using the new event for joins
+        OnSessionJoined?.Invoke(_currentSession);
 
         Debug.Log("Successfully joined new session!");
     }
@@ -239,8 +239,7 @@ public class SessionManager : MonoBehaviour
             if (!NetworkManager.Singleton.IsListening)
                 NetworkManager.Singleton.StartClient();
 
-            UpdateSessionCodeInUI();
-            OnSessionJoined?.Invoke(_currentSession); // Rejoin is still "joining" an existing session
+            OnSessionJoined?.Invoke(_currentSession);
 
             Debug.Log("Rejoined previous session.");
             return true;

@@ -2,7 +2,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Services.Multiplayer;
-using Mono.Cecil.Cil;
 
 public class UIManager : MonoBehaviour
 {
@@ -30,6 +29,48 @@ public class UIManager : MonoBehaviour
             return;
         }
         Instance = this;
+    }
+
+    private void Start()
+    {
+        // Subscribe to session events
+        if (SessionManager.Instance != null)
+        {
+            SessionManager.Instance.OnSessionCreated += HandleSessionChanged;
+            SessionManager.Instance.OnSessionJoined += HandleSessionChanged;
+            SessionManager.Instance.OnBusyChanged += HandleBusyChanged;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Unsubscribe to prevent memory leaks
+        if (SessionManager.Instance != null)
+        {
+            SessionManager.Instance.OnSessionCreated -= HandleSessionChanged;
+            SessionManager.Instance.OnSessionJoined -= HandleSessionChanged;
+            SessionManager.Instance.OnBusyChanged -= HandleBusyChanged;
+        }
+    }
+
+    // --------------------
+    // SESSION EVENT HANDLERS
+    // --------------------
+
+    private void HandleSessionChanged(ISession session)
+    {
+        UpdateSessionCode(session);
+        ShowLoading(false);
+        Debug.Log("UI updated from session change");
+    }
+
+    private void HandleBusyChanged(bool isBusy)
+    {
+        ShowLoading(isBusy);
+
+        // Disable/enable input while busy
+        if (joinInputField != null)
+            joinInputField.interactable = !isBusy;
     }
 
     // --------------------
@@ -83,7 +124,13 @@ public class UIManager : MonoBehaviour
 
     public void JoinSessionWithCode()
     {
-        _ = SessionManager.Instance.JoinSessionAsync(joinInputField.text); 
+        if (SessionManager.Instance == null) return;
+
+        string joinCode = joinInputField.text;
+        if (string.IsNullOrEmpty(joinCode)) return;
+
+        ShowLoading(true);
+        _ = SessionManager.Instance.JoinSessionAsync(joinCode);
     }
 
     // --------------------

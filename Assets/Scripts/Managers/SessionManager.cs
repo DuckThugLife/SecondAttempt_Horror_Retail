@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Services.Multiplayer;
@@ -12,11 +13,10 @@ public class SessionManager : MonoBehaviour
     public event Action<ISession> OnSessionCreated;
     public event Action<bool> OnBusyChanged;
 
-
-
-
     private ISession _currentSession;
     private bool _isBusy;
+
+    #region Unity Lifecycle
 
     private void Awake()
     {
@@ -39,46 +39,47 @@ public class SessionManager : MonoBehaviour
         NetBootstrap.OnServicesInitialized -= HandleServicesReady;
     }
 
-    // --------------------
-    // SOLO
-    // --------------------
+    #endregion
+
+    #region Initialization
+
+    private async void HandleServicesReady()
+    {
+        SceneManager.LoadScene("LobbyScene");
+        await HostSessionAsync();
+    }
+
+    #endregion
+
+    #region Solo Mode
 
     public void StartSoloGame()
     {
-        if (_isBusy || NetworkManager.Singleton.IsListening) return;
+        if (_isBusy || NetworkManager.Singleton.IsListening)
+            return;
+
         NetworkManager.Singleton.StartHost();
         StartGameForAllPlayers();
     }
 
-    // --------------------
-    // HOST
-    // --------------------
+    #endregion
+
+    #region Hosting
 
     public async Task HostSessionAsync(int maxPlayers = 4)
     {
-        if (_isBusy || !NetBootstrap.IsInitialized) return;
+        if (_isBusy || !NetBootstrap.IsInitialized)
+            return;
 
         SetBusy(true);
 
         try
         {
-            if (NetworkManager.Singleton.IsListening)
-                NetworkManager.Singleton.Shutdown();
+            await CleanupNetworkSessionAsync();
+            _currentSession = await CreateNewSessionAsync(maxPlayers);
+            StartHostIfNeeded();
 
-            var options = new SessionOptions
-            {
-                MaxPlayers = maxPlayers
-            }.WithRelayNetwork();
-
-            _currentSession =
-                await MultiplayerService.Instance.CreateSessionAsync(options);
-
-            if (!NetworkManager.Singleton.IsListening)
-                NetworkManager.Singleton.StartHost();
-
-            // Update the join code field for the host
             UIManager.Instance.UpdateSessionCode(_currentSession);
-
             OnSessionCreated?.Invoke(_currentSession);
         }
         catch (Exception e)
@@ -92,87 +93,56 @@ public class SessionManager : MonoBehaviour
         }
     }
 
-    // --------------------
-    // JOIN
-    // --------------------
+    private async Task CleanupNetworkSessionAsync()
+    {
+        if (NetworkManager.Singleton.IsListening)
+            NetworkManager.Singleton.Shutdown();
 
+        await Task.CompletedTask;
+    }
+
+    private async Task<ISession> CreateNewSessionAsync(int maxPlayers)
+    {
+        var options = new SessionOptions
+        {
+            MaxPlayers = maxPlayers
+        }.WithRelayNetwork();
+
+        return await MultiplayerService.Instance.CreateSessionAsync(options);
+    }
+
+    private void StartHostIfNeeded()
+    {
+        if (!NetworkManager.Singleton.IsListening)
+            NetworkManager.Singleton.StartHost();
+    }
+
+    #endregion
+
+    #region Joining
 
     public async Task JoinSessionAsync(string newCode)
     {
-        if (_isBusy || string.IsNullOrWhiteSpace(newCode)) return;
-
-        // Validate join code format
-        if (!System.Text.RegularExpressions.Regex.IsMatch(newCode, @"^[A-Z0-9]{6}$"))
+        if (!CanAttemptJoin(newCode, out string validationError))
         {
-            Debug.LogError($"Invalid code format: {newCode}");
+            Debug.LogError(validationError);
             return;
         }
 
         SetBusy(true);
 
         string oldCode = _currentSession?.Code;
-        ISession oldSession = _currentSession;
+        bool hadPreviousSession = _currentSession != null;
 
-        // Leave current session safely
-        if (_currentSession != null)
-        {
-            try
-            {
-                await _currentSession.LeaveAsync();
-            }
-            catch (Exception leaveEx)
-            {
-                Debug.LogWarning($"Failed to leave session: {leaveEx.Message}");
-            }
-
-            _currentSession = null;
-
-            if (NetworkManager.Singleton.IsListening)
-                NetworkManager.Singleton.Shutdown();
-        }
+        await LeaveCurrentSessionIfAny();
 
         try
         {
-            // Attempt to join the new session
-            _currentSession = await MultiplayerService.Instance.JoinSessionByCodeAsync(newCode);
-
-            if (!NetworkManager.Singleton.IsListening)
-                NetworkManager.Singleton.StartClient();
-
-            Debug.Log("Successfully joined new session!");
-            // Stay in LobbyScene; UI should update automatically
+            await AttemptJoinNewSessionAsync(newCode);
         }
         catch (Exception joinEx)
         {
-            Debug.LogWarning($"Failed to join new session ({newCode}): {joinEx.Message}");
-
-            // Small delay to reduce "Too Many Requests"
-            await Task.Delay(1000);
-
-            // Attempt to rejoin the old session
-            if (!string.IsNullOrEmpty(oldCode))
-            {
-                try
-                {
-                    _currentSession = await MultiplayerService.Instance.JoinSessionByCodeAsync(oldCode);
-
-                    if (!NetworkManager.Singleton.IsListening)
-                        NetworkManager.Singleton.StartClient();
-
-                    Debug.Log("Rejoined previous session.");
-                    // Stay in LobbyScene
-                    return;
-                }
-                catch (Exception oldJoinEx)
-                {
-                    Debug.LogWarning($"Failed to rejoin previous session ({oldCode}): {oldJoinEx.Message}");
-                }
-            }
-
-            // Final fallback: host a new session
-            Debug.Log("Hosting new session as fallback.");
-            await HostSessionAsync();
-            // LobbyScene remains active by default
+            await HandleJoinFailureAsync(joinEx, newCode, oldCode, hadPreviousSession);
         }
         finally
         {
@@ -180,18 +150,99 @@ public class SessionManager : MonoBehaviour
         }
     }
 
-    // --------------------
-    // GAME FLOW
-    // --------------------
+    private bool CanAttemptJoin(string code, out string error)
+    {
+        error = null;
+
+        if (_isBusy || string.IsNullOrWhiteSpace(code))
+        {
+            error = "Cannot join: Session manager is busy or code is empty";
+            return false;
+        }
+
+        if (!Regex.IsMatch(code, @"^[A-Z0-9]{6}$"))
+        {
+            error = $"Invalid code format: {code}";
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task LeaveCurrentSessionIfAny()
+    {
+        if (_currentSession == null)
+            return;
+
+        try
+        {
+            await _currentSession.LeaveAsync();
+        }
+        catch (Exception leaveEx)
+        {
+            Debug.LogWarning($"Failed to leave session: {leaveEx.Message}");
+        }
+
+        _currentSession = null;
+
+        if (NetworkManager.Singleton.IsListening)
+            NetworkManager.Singleton.Shutdown();
+    }
+
+    private async Task AttemptJoinNewSessionAsync(string newCode)
+    {
+        _currentSession = await MultiplayerService.Instance.JoinSessionByCodeAsync(newCode);
+
+        if (!NetworkManager.Singleton.IsListening)
+            NetworkManager.Singleton.StartClient();
+
+        Debug.Log("Successfully joined new session!");
+    }
+
+    private async Task HandleJoinFailureAsync(Exception joinEx, string newCode, string oldCode, bool hadPreviousSession)
+    {
+        Debug.LogWarning($"Failed to join new session ({newCode}): {joinEx.Message}");
+
+        await Task.Delay(1000);
+
+        if (hadPreviousSession && await TryRejoinOldSessionAsync(oldCode))
+            return;
+
+        await HostSessionAsync();
+    }
+
+    private async Task<bool> TryRejoinOldSessionAsync(string oldCode)
+    {
+        if (string.IsNullOrEmpty(oldCode))
+            return false;
+
+        try
+        {
+            _currentSession = await MultiplayerService.Instance.JoinSessionByCodeAsync(oldCode);
+
+            if (!NetworkManager.Singleton.IsListening)
+                NetworkManager.Singleton.StartClient();
+
+            Debug.Log("Rejoined previous session.");
+            return true;
+        }
+        catch (Exception oldJoinEx)
+        {
+            Debug.LogWarning($"Failed to rejoin previous session ({oldCode}): {oldJoinEx.Message}");
+            return false;
+        }
+    }
+
+    #endregion
+
+    #region Game Flow
 
     public void StartGameForAllPlayers()
     {
-        if (!NetworkManager.Singleton.IsHost) return;
+        if (!NetworkManager.Singleton.IsHost)
+            return;
 
-        NetworkManager.Singleton.SceneManager.LoadScene(
-            "GameScene",
-            LoadSceneMode.Single
-        );
+        NetworkManager.Singleton.SceneManager.LoadScene("GameScene", LoadSceneMode.Single);
     }
 
     public async Task LeaveSessionAsync()
@@ -211,12 +262,12 @@ public class SessionManager : MonoBehaviour
             _currentSession = null;
             SetBusy(false);
             SceneManager.LoadScene("LobbyScene");
-        }   
+        }
     }
 
-    // --------------------
-    // INTERNAL
-    // --------------------
+    #endregion
+
+    #region Internal Helpers
 
     private void SetBusy(bool value)
     {
@@ -224,9 +275,5 @@ public class SessionManager : MonoBehaviour
         OnBusyChanged?.Invoke(value);
     }
 
-    private async void HandleServicesReady()
-    {
-        SceneManager.LoadScene("LobbyScene");
-        await HostSessionAsync();
-    }
+    #endregion
 }

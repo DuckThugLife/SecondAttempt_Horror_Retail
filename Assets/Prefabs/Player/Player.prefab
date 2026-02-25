@@ -368,6 +368,7 @@ MonoBehaviour:
   mouseSensitivity: 100
   pitchMin: -60
   pitchMax: 75
+  turningEnabled: 1
 --- !u!114 &4577572879469353610
 MonoBehaviour:
   m_ObjectHideFlags: 0

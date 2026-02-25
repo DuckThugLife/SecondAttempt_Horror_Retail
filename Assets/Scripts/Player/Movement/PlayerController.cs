@@ -22,6 +22,8 @@ public class PlayerController : NetworkBehaviour
     [SerializeField] private float pitchMin = -60f;
     [SerializeField] private float pitchMax = 75f;
 
+    [field: SerializeField] private bool turningEnabled = true;
+
     private float pitch;
     private float verticalVelocity = 0f;
 
@@ -67,6 +69,8 @@ public class PlayerController : NetworkBehaviour
 
     private void TurnCharacter(Vector2 lookInput)
     {
+        if (!turningEnabled) return;
+
         float yaw = lookInput.x * mouseSensitivity * Time.deltaTime;
         transform.Rotate(Vector3.up * yaw);
 
@@ -74,5 +78,14 @@ public class PlayerController : NetworkBehaviour
         pitch = Mathf.Clamp(pitch, pitchMin, pitchMax);
 
         cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+    }
+
+    public void EnableTurning()
+    {
+        turningEnabled = true;
+    }
+    public void DisableTurning()
+    {
+        turningEnabled = false;
     }
 }

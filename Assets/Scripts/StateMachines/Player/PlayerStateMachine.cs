@@ -56,6 +56,14 @@ public class PlayerStateMachine : NetworkBehaviour
         _currentState.Enter();
     }
 
+    // Go back to last state
+    public void RevertToPreviousState()
+    {
+        if (_previousState != null)
+            ChangeState(_previousState);
+    }
+
+
     // Lock & hide the cursor for gameplay
     public void LockCursor()
     {
@@ -70,11 +78,6 @@ public class PlayerStateMachine : NetworkBehaviour
         Cursor.visible = true;
     }
 
-    public void RevertToPreviousState()
-    {
-        if (_previousState != null)
-            ChangeState(_previousState);
-    }
 
 
 }

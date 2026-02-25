@@ -8,6 +8,7 @@ public class PlayerUIState : PlayerState
     {
         stateMachine.PlayerInputHandler.SetMovementEnabled(false); // only movement blocked
         stateMachine.UnlockCursor(); // unlocks AND makes cursor visible
+        stateMachine.PlayerController.DisableTurning();
     }
 
     public override void Exit()
@@ -15,6 +16,7 @@ public class PlayerUIState : PlayerState
         stateMachine.PlayerInputHandler.SetMovementEnabled(true);
         stateMachine.LockCursor();   // locks AND hides cursor
         UIManager.Instance.SessionUIManager.HideLobbyUI();
+        stateMachine.PlayerController.EnableTurning();
     }
 
     public override void Tick()

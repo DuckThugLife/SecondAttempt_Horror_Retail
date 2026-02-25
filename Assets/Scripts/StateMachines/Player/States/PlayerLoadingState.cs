@@ -1,21 +1,42 @@
 using Unity.Services.Multiplayer;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class PlayerLoadingState : PlayerState
 {
+    private float _joinStartTime;
+    private const float JoinTimeout = 20f; // 20 second timeout
+
     public PlayerLoadingState(PlayerStateMachine machine) : base(machine)
     {
-        // Subscribe in constructor
         if (SessionManager.Instance != null)
         {
             SessionManager.Instance.OnSessionJoined += OnSessionJoined;
             SessionManager.Instance.OnSessionCreated += OnSessionJoined;
+            SessionManager.Instance.OnHostDisconnected += OnHostDisconnected; // Add this event
+        }
+    }
+
+    public override void Enter()
+    {
+        _joinStartTime = Time.time;
+        stateMachine.PlayerInputHandler.SetMovementEnabled(false);
+        stateMachine.UnlockCursor();
+        UIManager.Instance.SessionUIManager.ShowLoading(true);
+        UIManager.Instance.SessionUIManager.HideLobbyUI();
+    }
+
+    private void OnHostDisconnected()
+    {
+        if (stateMachine.GetCurrentState() == this)
+        {
+            Debug.Log("Host disconnected during join - returning to lobby");
+            stateMachine.ChangeState(stateMachine.LobbyState);
         }
     }
 
     private void OnSessionJoined(ISession session)
     {
-        // When session is established, leave loading state
         if (stateMachine.GetCurrentState() == this)
         {
             if (SceneManager.GetActiveScene().name == "GameScene")
@@ -25,21 +46,13 @@ public class PlayerLoadingState : PlayerState
         }
     }
 
-    public override void Enter()
+    public override void Tick()
     {
-        stateMachine.PlayerInputHandler.SetMovementEnabled(false);
-        stateMachine.UnlockCursor();
-        UIManager.Instance.SessionUIManager.ShowLoading(true);
-        UIManager.Instance.SessionUIManager.HideLobbyUI();
-    }
-
-    // unsubscribe
-    ~PlayerLoadingState()
-    {
-        if (SessionManager.Instance != null)
+        // Timeout if join takes too long
+        if (Time.time - _joinStartTime > JoinTimeout)
         {
-            SessionManager.Instance.OnSessionJoined -= OnSessionJoined;
-            SessionManager.Instance.OnSessionCreated -= OnSessionJoined;
+            Debug.Log("Join timeout - returning to lobby");
+            stateMachine.ChangeState(stateMachine.LobbyState);
         }
     }
 }

@@ -44,12 +44,12 @@ public class SessionUIManager : MonoBehaviour
         UpdateSessionCode(session);
         ShowLoading(false);
 
-        // Disable join controls for non-hosts
+        // Hide join controls for non-hosts
         bool isHost = SessionManager.Instance != null && SessionManager.Instance.IsHost;
         if (joinInputField != null)
-            joinInputField.interactable = isHost;
+            joinInputField.gameObject.SetActive(isHost);
         if (joinButton != null)
-            joinButton.interactable = isHost;
+            joinButton.gameObject.SetActive(isHost);
 
         Debug.Log("Session UI updated");
     }

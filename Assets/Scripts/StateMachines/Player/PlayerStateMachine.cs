@@ -11,7 +11,9 @@ public class PlayerStateMachine : NetworkBehaviour
 
     [SerializeField] public PlayerController PlayerController;
     [SerializeField] public PlayerInputHandler PlayerInputHandler;
-   
+
+    public static PlayerStateMachine LocalInstance { get; private set; }
+
 
 
 
@@ -35,8 +37,15 @@ public class PlayerStateMachine : NetworkBehaviour
     {
         if (IsOwner)
         {
+            LocalInstance = this;
             ChangeState(LobbyState);
         }
+    }
+
+    public override void OnDestroy()
+    {
+        if (IsOwner && LocalInstance == this)
+            LocalInstance = null;
     }
 
     private void Update()
@@ -48,9 +57,10 @@ public class PlayerStateMachine : NetworkBehaviour
     public void ChangeState(PlayerState newState)
     {
         if (_currentState == newState) return;
+        Debug.Log($"State changing from {_currentState?.GetType().Name} to {newState.GetType().Name}");
 
         _currentState?.Exit();
-
+       
         _previousState = _currentState;
         _currentState = newState;
         _currentState.Enter();
@@ -61,6 +71,11 @@ public class PlayerStateMachine : NetworkBehaviour
     {
         if (_previousState != null)
             ChangeState(_previousState);
+    }
+
+    public PlayerState GetCurrentState()
+    {
+        return _currentState;
     }
 
 

@@ -5,8 +5,12 @@ public class PlayerLoadingState : PlayerState
 
     public override void Enter()
     {
-        stateMachine.PlayerInputHandler.SetMovementEnabled(false); // full lock for loading
+        stateMachine.PlayerInputHandler.SetMovementEnabled(false);
         stateMachine.UnlockCursor();
+
+        // Show loading, hide lobby
+        UIManager.Instance.SessionUIManager.ShowLoading(true);
+        UIManager.Instance.SessionUIManager.HideLobbyUI();
     }
 
     public override void Exit()

@@ -11,6 +11,7 @@ public class PlayerInputHandler : MonoBehaviour
 
     private bool movementEnabled = true;
 
+
     public void SetMovementEnabled(bool enabled)
     {
         movementEnabled = enabled;

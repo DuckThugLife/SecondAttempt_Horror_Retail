@@ -416,7 +416,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8598648582120088476}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a984a1b8ce52755488c35acb25c5303e, type: 3}
   m_Name: 
@@ -428,7 +428,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8598648582120088476}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
   m_Name: 
@@ -590,6 +590,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   playerController: {fileID: 3412940113391116781}
   playerInputHandler: {fileID: 1160765340064647956}
+  playerInput: {fileID: 8461560976690672628}
   playerCamera: {fileID: 8973406926762114327}
   audioListener: {fileID: 724431442683268618}
 --- !u!114 &6265108635202164623

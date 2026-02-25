@@ -22,11 +22,7 @@ public class JoinBoard : MonoBehaviour, IInteractable, IHoverable
     {
         if (!_isHovered) return;
 
-        // Show the lobby UI
-        UIManager.Instance.SessionUIManager.ShowLobbyUI();
-        UIManager.Instance.GameUIManager.HideGameUI();
-
-        // Switch the player into UI state
+        // Just change the state - let the state machine handle ALL UI
         interactor.StateMachine.ChangeState(interactor.StateMachine.UIState);
     }
 }

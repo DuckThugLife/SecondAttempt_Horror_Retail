@@ -9,6 +9,7 @@ using UnityEngine.SceneManagement;
 public class SessionManager : MonoBehaviour
 {
     public static SessionManager Instance { get; private set; }
+    public bool IsHost => NetworkManager.Singleton.IsHost;
 
     public event Action<ISession> OnSessionCreated;
     public event Action<ISession> OnSessionJoined;
@@ -250,24 +251,50 @@ public class SessionManager : MonoBehaviour
         NetworkManager.Singleton.SceneManager.LoadScene("GameScene", LoadSceneMode.Single);
     }
 
-    public async Task LeaveSessionAsync()
+public async Task LeaveSessionAsync()
+{
+    SetBusy(true);
+
+    try
     {
-        SetBusy(true);
-
-        try
+        if (IsHost)
         {
-            if (_currentSession != null)
+            Debug.Log("Host is leaving - ending session for all players");
+            await EndSessionForAllAsync();
+        }
+        else
+        {
+            Debug.Log("Client is leaving session");
+            await LeaveCurrentSessionIfAny();
+        }
+    }
+    finally
+    {
+        _currentSession = null;
+        SetBusy(false);
+        SceneManager.LoadScene("LobbyScene");
+        
+        // Host a new session after returning to lobby
+        await HostSessionAsync();
+    }
+}
+
+    private async Task EndSessionForAllAsync()
+    {
+        if (_currentSession != null)
+        {
+            try
+            {
                 await _currentSession.LeaveAsync();
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Error ending session: {e.Message}");
+            }
+        }
 
-            if (NetworkManager.Singleton != null)
-                NetworkManager.Singleton.Shutdown();
-        }
-        finally
-        {
-            _currentSession = null;
-            SetBusy(false);
-            SceneManager.LoadScene("LobbyScene");
-        }
+        if (NetworkManager.Singleton != null)
+            NetworkManager.Singleton.Shutdown();
     }
 
     #endregion

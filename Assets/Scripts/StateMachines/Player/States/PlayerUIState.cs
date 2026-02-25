@@ -14,6 +14,7 @@ public class PlayerUIState : PlayerState
     {
         stateMachine.PlayerInputHandler.SetMovementEnabled(true);
         stateMachine.LockCursor();   // locks AND hides cursor
+        UIManager.Instance.SessionUIManager.HideLobbyUI();
     }
 
     public override void Tick()

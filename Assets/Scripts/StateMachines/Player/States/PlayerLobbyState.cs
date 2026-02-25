@@ -5,7 +5,7 @@ public class PlayerLobbyState : PlayerState
     public override void Enter()
     {
         UIManager.Instance.GameUIManager.ShowGameUI();
-        stateMachine.PlayerInputHandler.SetMovementEnabled(true); // <-- only movement enabled
+        stateMachine.PlayerInputHandler.SetMovementEnabled(true); // only movement enabled
         stateMachine.LockCursor();
     }
 

@@ -4,7 +4,7 @@ public class PlayerAliveState : PlayerState
 
     public override void Enter()
     {
-        stateMachine.PlayerInputHandler.SetMovementEnabled(true); // <-- only movement enabled
+        stateMachine.PlayerInputHandler.SetMovementEnabled(true); // only movement enabled
         stateMachine.LockCursor();
     }
 

@@ -9,16 +9,6 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private GameObject hoverIconGO;
     [SerializeField] private GameObject crosshairGO;
 
-    private void Awake()
-    {
-        if (Instance != null)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-    }
-
     public void ShowGameUI()
     {
         if (gameRootGO != null)

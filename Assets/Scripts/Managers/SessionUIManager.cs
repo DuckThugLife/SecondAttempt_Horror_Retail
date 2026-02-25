@@ -16,15 +16,6 @@ public class SessionUIManager : MonoBehaviour
     [Header("Overlays")]
     [SerializeField] private GameObject loadingOverlay;
 
-    private void Awake()
-    {
-        if (Instance != null)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-    }
 
     private void Start()
     {

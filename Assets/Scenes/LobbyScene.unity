@@ -4441,6 +4441,17 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1970895075}
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2044443127 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+  m_PrefabInstance: {fileID: 4068421308227110857}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2045461985
 GameObject:
   m_ObjectHideFlags: 0
@@ -4858,45 +4869,13 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
-      value: 
-      objectReference: {fileID: 6810620785166626265}
-    - target: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: JoinSessionWithCode
-      objectReference: {fileID: 0}
-    - target: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: SessionUIManager, Assembly-CSharp
-      objectReference: {fileID: 0}
-    - target: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
-      value: UnityEngine.Object, UnityEngine
-      objectReference: {fileID: 0}
-    - target: {fileID: 2336054182634605905, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2336054182634605905, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 6810620785166626265}
     - target: {fileID: 2336054182634605905, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnLeaveButtonClicked
-      objectReference: {fileID: 0}
-    - target: {fileID: 2336054182634605905, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: SessionUIManager, Assembly-CSharp
-      objectReference: {fileID: 0}
-    - target: {fileID: 2336054182634605905, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
-      value: UnityEngine.Object, UnityEngine
-      objectReference: {fileID: 0}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 6810620785166626265}
     - target: {fileID: 8040604167661538135, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -4981,21 +4960,9 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 6810620785166626265}
-    - target: {fileID: 8083600298834016755, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: CopyJoinCode
-      objectReference: {fileID: 0}
-    - target: {fileID: 8083600298834016755, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: SessionUIManager, Assembly-CSharp
-      objectReference: {fileID: 0}
     - target: {fileID: 8813452962057418602, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
       propertyPath: m_Name
       value: PlayerCanvas
-      objectReference: {fileID: 0}
-    - target: {fileID: 8999450368313037139, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -5081,6 +5048,10 @@ PrefabInstance:
       propertyPath: copyButton
       value: 
       objectReference: {fileID: 1716262543}
+    - target: {fileID: 5258864269948342293, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
+      propertyPath: joinButton
+      value: 
+      objectReference: {fileID: 2044443127}
     - target: {fileID: 5258864269948342293, guid: ba7919d24d331b543b7576717ddc44c3, type: 3}
       propertyPath: leaveButton
       value: 

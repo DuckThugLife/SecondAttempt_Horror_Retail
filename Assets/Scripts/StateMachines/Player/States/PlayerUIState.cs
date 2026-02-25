@@ -17,18 +17,26 @@ public class PlayerUIState : PlayerState
         stateMachine.PlayerInputHandler.SetMovementEnabled(true);
         stateMachine.LockCursor();
         stateMachine.PlayerController.EnableTurning();
-        UIManager.Instance.SessionUIManager.HideLobbyUI();
+
+        if (UIManager.Instance != null && UIManager.Instance.SessionUIManager != null)
+            UIManager.Instance.SessionUIManager.HideLobbyUI();
+
+        // Reset hover state
+        if (UIManager.Instance != null && UIManager.Instance.GameUIManager != null)
+            UIManager.Instance.GameUIManager.UnHoverUI();
+
+        // Clear any lingering hover
+        if (stateMachine.Interactor != null)
+            stateMachine.Interactor.ClearHover();
     }
 
     public override void Tick()
     {
-        // Always get fresh reference from state machine, was getting weird interactions when I joined a player.
         if (stateMachine.PlayerInputHandler == null)
             return;
 
         if (stateMachine.PlayerInputHandler.LastKeyPressed == Key.Escape)
         {
-            // Don't revive dead players!
             if (stateMachine.GetCurrentState() is PlayerDeadState)
             {
                 stateMachine.ChangeState(stateMachine.DeadState);

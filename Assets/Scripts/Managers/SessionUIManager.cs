@@ -14,6 +14,7 @@ public class SessionUIManager : MonoBehaviour
     [SerializeField] private TMP_Text joinCodeText;
     [SerializeField] private Button copyButton;
     [SerializeField] private Button leaveButton;
+    [SerializeField] private Button joinButton;
 
     [Header("Overlays")]
     [SerializeField] private GameObject loadingOverlay;
@@ -43,34 +44,19 @@ public class SessionUIManager : MonoBehaviour
         UpdateSessionCode(session);
         ShowLoading(false);
 
-        // When session is established, go to lobby state (unless in game)
-        if (PlayerStateMachine.LocalInstance != null)
-        {
-            if (SceneManager.GetActiveScene().name == "GameScene")
-                PlayerStateMachine.LocalInstance.ChangeState(PlayerStateMachine.LocalInstance.AliveState);
-            else
-                PlayerStateMachine.LocalInstance.ChangeState(PlayerStateMachine.LocalInstance.LobbyState);
-        }
+        // Disable join controls for non-hosts
+        bool isHost = SessionManager.Instance != null && SessionManager.Instance.IsHost;
+        if (joinInputField != null)
+            joinInputField.interactable = isHost;
+        if (joinButton != null)
+            joinButton.interactable = isHost;
 
         Debug.Log("Session UI updated");
     }
 
     private void HandleBusyChanged(bool isBusy)
     {
-        // Only show loading overlay if we're not in loading state
-        if (PlayerStateMachine.LocalInstance == null)
-        {
-            ShowLoading(isBusy);
-        }
-        else
-        {
-            var currentState = PlayerStateMachine.LocalInstance.GetCurrentState();
-            if (!(currentState is PlayerLoadingState))
-            {
-                ShowLoading(isBusy);
-            }
-        }
-
+        ShowLoading(isBusy);
         if (joinInputField != null)
             joinInputField.interactable = !isBusy;
     }
@@ -122,15 +108,14 @@ public class SessionUIManager : MonoBehaviour
         string joinCode = joinInputField.text;
         if (string.IsNullOrEmpty(joinCode)) return;
 
-        if (PlayerStateMachine.LocalInstance != null)
+        // Force exit UI state BEFORE any scene changes
+        if (PlayerStateMachine.LocalInstance != null &&
+            PlayerStateMachine.LocalInstance.GetCurrentState() is PlayerUIState)
         {
             PlayerStateMachine.LocalInstance.ChangeState(PlayerStateMachine.LocalInstance.LoadingState);
         }
-        else
-        {
-            ShowLoading(true);
-        }
 
+        ShowLoading(true);
         _ = SessionManager.Instance.JoinSessionAsync(joinCode);
     }
 
@@ -138,12 +123,6 @@ public class SessionUIManager : MonoBehaviour
     {
         if (SessionManager.Instance != null)
         {
-            if (SessionManager.Instance.IsHost)
-            {
-                // I could show a warning popup here, which will also have a button to LeaveSession and could just return here
-                Debug.Log("Host is leaving - game will end for everyone");
-            }
-
             _ = SessionManager.Instance.LeaveSessionAsync();
         }
     }

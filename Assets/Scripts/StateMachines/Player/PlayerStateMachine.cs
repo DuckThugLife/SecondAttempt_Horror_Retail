@@ -11,6 +11,7 @@ public class PlayerStateMachine : NetworkBehaviour
 
     [SerializeField] public PlayerController PlayerController;
     [SerializeField] public PlayerInputHandler PlayerInputHandler;
+    [SerializeField] public Interactor Interactor;
 
     public static PlayerStateMachine LocalInstance { get; private set; }
 

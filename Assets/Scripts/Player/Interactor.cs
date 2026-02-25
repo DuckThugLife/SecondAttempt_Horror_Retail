@@ -59,7 +59,7 @@ public class Interactor : MonoBehaviour
         _currentHoverable?.HoverEnter(this);
     }
 
-    private void ClearHover()
+    public void ClearHover()
     {
         if (_currentHoverable != null)
         {

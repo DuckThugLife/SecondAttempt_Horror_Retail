@@ -51,5 +51,11 @@ public class PlayerInputHandler : MonoBehaviour
             LastKeyPressed = Key.Escape; // maps ESC key press to LastKeyPressed
     }
 
+    public void OnOpenChat(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+            LastKeyPressed = Key.Enter;
+    }
+
     public void ResetLastKey() => LastKeyPressed = Key.None;
 }

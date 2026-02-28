@@ -7,6 +7,7 @@ public class UIManager : MonoBehaviour
     [Header("UI Managers")]
     [field: SerializeField] public SessionUIManager SessionUIManager { get; private set; }
     [field: SerializeField] public GameUIManager GameUIManager { get; private set; }
+    [field: SerializeField] public MessageController ChatUI { get; private set; }
 
     private void Awake()
     {

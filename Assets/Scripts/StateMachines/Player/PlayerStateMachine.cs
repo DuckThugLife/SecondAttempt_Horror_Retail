@@ -1,13 +1,11 @@
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Playables;
+using System.Collections.Generic;
 
 public class PlayerStateMachine : NetworkBehaviour
 {
-    //  track states
-    private PlayerState _currentState;
-    private PlayerState _previousState; 
+    private Stack<PlayerState> _stateStack = new Stack<PlayerState>();
 
     [SerializeField] public PlayerController PlayerController;
     [SerializeField] public PlayerInputHandler PlayerInputHandler;
@@ -15,23 +13,24 @@ public class PlayerStateMachine : NetworkBehaviour
 
     public static PlayerStateMachine LocalInstance { get; private set; }
 
-
-
-
     // Cached states (no allocations during gameplay)
     public PlayerLobbyState LobbyState { get; private set; }
     public PlayerAliveState AliveState { get; private set; }
     public PlayerDeadState DeadState { get; private set; }
-    public PlayerUIState UIState { get; private set; }
+    public LobbyMenuState LobbyMenuState { get; private set; }
     public PlayerLoadingState LoadingState { get; private set; }
+    public ChatState ChatState { get; private set; }
+
+    public PlayerState CurrentState => _stateStack.Count > 0 ? _stateStack.Peek() : null;
 
     private void Awake()
     {
         LobbyState = new PlayerLobbyState(this);
         AliveState = new PlayerAliveState(this);
         DeadState = new PlayerDeadState(this);
-        UIState = new PlayerUIState(this);
+        LobbyMenuState = new LobbyMenuState(this);
         LoadingState = new PlayerLoadingState(this);
+        ChatState = new ChatState(this);
     }
 
     public override void OnNetworkSpawn()
@@ -52,48 +51,91 @@ public class PlayerStateMachine : NetworkBehaviour
     private void Update()
     {
         if (!IsOwner) return;
-        _currentState?.Tick();
+
+        HandleGlobalInput();
+        CurrentState?.Tick();
+    }
+
+    public void PushState(PlayerState newState)
+    {
+        if (_stateStack.Count > 0)
+            _stateStack.Peek().Exit();
+
+        _stateStack.Push(newState);
+        newState.Enter();
+        Debug.Log($"Pushed state: {newState.GetType().Name}");
+    }
+
+    public void PopState()
+    {
+        if (_stateStack.Count <= 1) return;
+
+        var current = _stateStack.Pop();
+        current.Exit();
+
+        _stateStack.Peek().Enter();
+        Debug.Log($"Popped state, current: {_stateStack.Peek().GetType().Name}");
     }
 
     public void ChangeState(PlayerState newState)
     {
-        if (_currentState == newState) return;
-        Debug.Log($"State changing from {_currentState?.GetType().Name} to {newState.GetType().Name}");
+        while (_stateStack.Count > 0)
+            _stateStack.Pop().Exit();
 
-        _currentState?.Exit();
-       
-        _previousState = _currentState;
-        _currentState = newState;
-        _currentState.Enter();
+        _stateStack.Push(newState);
+        newState.Enter();
+        Debug.Log($"Changed to state: {newState.GetType().Name}");
     }
 
-    // Go back to last state
     public void RevertToPreviousState()
     {
-        if (_previousState != null)
-            ChangeState(_previousState);
+        // Not needed with stack
     }
 
-    public PlayerState GetCurrentState()
-    {
-        return _currentState;
-    }
+    public PlayerState GetCurrentState() => CurrentState;
 
-
-    // Lock & hide the cursor for gameplay
     public void LockCursor()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
-    // Unlock & show the cursor for UI
     public void UnlockCursor()
     {
         Cursor.lockState = CursorLockMode.Confined;
         Cursor.visible = true;
     }
 
+    public void SetPlayerEnabled(bool enabled)
+    {
+        PlayerInputHandler.SetMovementEnabled(enabled);
 
+        if (enabled)
+        {
+            PlayerController.EnableTurning();
+            LockCursor();
+        }
+        else
+        {
+            PlayerController.DisableTurning();
+            UnlockCursor();
+        }
+    }
 
+    public void OpenLobbyMenu()
+    {
+        PushState(LobbyMenuState);
+    }
+
+    private void HandleGlobalInput()
+    {
+        if (PlayerInputHandler.LastKeyPressed == Key.Enter)
+        {
+            if (!(CurrentState is BaseUIState))
+            {
+                PushState(ChatState);
+            }
+            PlayerInputHandler.ResetLastKey();
+        }
+    }
 }

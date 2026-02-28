@@ -48,6 +48,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <SessionUIManager>k__BackingField: {fileID: 5258864269948342293}
   <GameUIManager>k__BackingField: {fileID: 7503072220314770964}
+  <ChatUI>k__BackingField: {fileID: 0}
 --- !u!114 &5258864269948342293
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -64,6 +65,8 @@ MonoBehaviour:
   joinInputField: {fileID: 0}
   joinCodeText: {fileID: 0}
   copyButton: {fileID: 0}
+  leaveButton: {fileID: 0}
+  joinButton: {fileID: 0}
   loadingOverlay: {fileID: 0}
 --- !u!114 &7503072220314770964
 MonoBehaviour:

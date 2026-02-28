@@ -2,8 +2,6 @@ using UnityEngine;
 
 public class GameUIManager : MonoBehaviour
 {
-    public static GameUIManager Instance { get; private set; }
-
     [Header("Game UI")]
     [SerializeField] private GameObject gameRootGO;
     [SerializeField] private GameObject hoverIconGO;

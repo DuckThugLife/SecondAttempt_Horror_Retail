@@ -23,6 +23,6 @@ public class JoinBoard : MonoBehaviour, IInteractable, IHoverable
         if (!_isHovered) return;
 
         // Just change the state - let the state machine handle ALL UI
-        interactor.StateMachine.ChangeState(interactor.StateMachine.UIState);
+        interactor.StateMachine.ChangeState(interactor.StateMachine.LobbyMenuState);
     }
 }

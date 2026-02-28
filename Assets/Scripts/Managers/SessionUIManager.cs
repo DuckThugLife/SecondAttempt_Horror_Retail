@@ -1,12 +1,15 @@
 using TMPro;
 using Unity.Services.Multiplayer;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class SessionUIManager : MonoBehaviour
 {
-    public static SessionUIManager Instance { get; private set; }
+    public static bool IsAnyInputFocused => 
+        UIManager.Instance != null && 
+        UIManager.Instance.SessionUIManager != null &&
+        UIManager.Instance.SessionUIManager.joinInputField != null && 
+        UIManager.Instance.SessionUIManager.joinInputField.isFocused;
 
     [Header("Lobby UI")]
     [SerializeField] private GameObject lobbyRootGO;
@@ -19,7 +22,7 @@ public class SessionUIManager : MonoBehaviour
     [Header("Overlays")]
     [SerializeField] private GameObject loadingOverlay;
 
-    private void Start()
+    private void OnEnable()
     {
         if (SessionManager.Instance != null)
         {
@@ -44,14 +47,11 @@ public class SessionUIManager : MonoBehaviour
         UpdateSessionCode(session);
         ShowLoading(false);
 
-        // Hide join controls for non-hosts
         bool isHost = SessionManager.Instance != null && SessionManager.Instance.IsHost;
         if (joinInputField != null)
             joinInputField.gameObject.SetActive(isHost);
         if (joinButton != null)
             joinButton.gameObject.SetActive(isHost);
-
-        Debug.Log("Session UI updated");
     }
 
     private void HandleBusyChanged(bool isBusy)
@@ -61,28 +61,13 @@ public class SessionUIManager : MonoBehaviour
             joinInputField.interactable = !isBusy;
     }
 
-    public void ShowLobbyUI()
-    {
-        if (lobbyRootGO != null)
-            lobbyRootGO.SetActive(true);
-    }
-
-    public void HideLobbyUI()
-    {
-        if (lobbyRootGO != null)
-            lobbyRootGO.SetActive(false);
-    }
-
-    public void ShowLoading(bool value)
-    {
-        if (loadingOverlay != null)
-            loadingOverlay.SetActive(value);
-    }
+    public void ShowLobbyUI() => lobbyRootGO?.SetActive(true);
+    public void HideLobbyUI() => lobbyRootGO?.SetActive(false);
+    public void ShowLoading(bool value) => loadingOverlay?.SetActive(value);
 
     public void UpdateSessionCode(ISession session)
     {
         if (session == null) return;
-
         joinCodeText.text = $"Join Code: {session.Code}";
         copyButton.gameObject.SetActive(true);
     }
@@ -96,7 +81,6 @@ public class SessionUIManager : MonoBehaviour
     public void CopyJoinCode()
     {
         if (string.IsNullOrEmpty(joinCodeText.text)) return;
-
         string code = joinCodeText.text.Replace("Join Code: ", "");
         GUIUtility.systemCopyBuffer = code;
     }
@@ -104,13 +88,11 @@ public class SessionUIManager : MonoBehaviour
     public void JoinSessionWithCode()
     {
         if (SessionManager.Instance == null) return;
-
         string joinCode = joinInputField.text;
         if (string.IsNullOrEmpty(joinCode)) return;
 
-        // Force exit UI state BEFORE any scene changes
         if (PlayerStateMachine.LocalInstance != null &&
-            PlayerStateMachine.LocalInstance.GetCurrentState() is PlayerUIState)
+            PlayerStateMachine.LocalInstance.GetCurrentState() is BaseUIState)
         {
             PlayerStateMachine.LocalInstance.ChangeState(PlayerStateMachine.LocalInstance.LoadingState);
         }
@@ -122,8 +104,6 @@ public class SessionUIManager : MonoBehaviour
     public void OnLeaveButtonClicked()
     {
         if (SessionManager.Instance != null)
-        {
             _ = SessionManager.Instance.LeaveSessionAsync();
-        }
     }
 }

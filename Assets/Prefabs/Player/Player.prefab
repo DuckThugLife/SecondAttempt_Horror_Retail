@@ -297,6 +297,7 @@ GameObject:
   - component: {fileID: 5866110922946851704}
   - component: {fileID: 6265108635202164623}
   - component: {fileID: 8882241094224428220}
+  - component: {fileID: -5110520833891290041}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -384,6 +385,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   PlayerController: {fileID: 3412940113391116781}
   PlayerInputHandler: {fileID: 1160765340064647956}
+  Interactor: {fileID: 8882241094224428220}
 --- !u!143 &6108898153566385600
 CharacterController:
   m_ObjectHideFlags: 0
@@ -570,6 +572,22 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 9caa3d8a-6b2f-4e8e-8bad-6ede561bd9be
     m_ActionName: UI/TrackedDeviceOrientation
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1160765340064647956}
+        m_TargetAssemblyTypeName: PlayerInputHandler, Assembly-CSharp
+        m_MethodName: OnOpenChat
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 080ce803-5edf-4763-bd0d-f38eb76895cf
+    m_ActionName: 'UI/OpenChat[/Keyboard/enter]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -657,3 +675,16 @@ MonoBehaviour:
   interactMask:
     serializedVersion: 2
     m_Bits: 64
+--- !u!114 &-5110520833891290041
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8598648582120088476}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36dfe14bd8f914c01a23a5c26201635d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1

@@ -19,7 +19,15 @@ public class Player : NetworkBehaviour
             NetworkObjectManager.Instance.RegisterPlayer(OwnerClientId, this);
 
         if (IsOwner)
+        {
             Local = this;
+
+            // Set default username if not already set
+            if (string.IsNullOrEmpty(usernameNetworkVar.Value.ToString()))
+            {
+                SetUsername($"Player{OwnerClientId}");
+            }
+        }
     }
 
     public override void OnNetworkDespawn()

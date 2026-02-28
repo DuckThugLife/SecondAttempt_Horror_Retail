@@ -1,25 +1,21 @@
-﻿using Unity.Netcode;
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 
-public class NetworkObjectManager : NetworkBehaviour
+public class NetworkObjectManager : MonoBehaviour // Not NetworkBehaviour
 {
     public static NetworkObjectManager Instance { get; private set; }
 
     private Dictionary<ulong, Player> _players = new Dictionary<ulong, Player>();
 
-    public override void OnNetworkSpawn()
+    private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (Instance != null)
         {
-            Debug.LogWarning("NetworkObjectManager instance already exists, destroying duplicate");
             Destroy(gameObject);
             return;
         }
-
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        Debug.Log("NetworkObjectManager initialized");
     }
 
     public void RegisterPlayer(ulong clientId, Player player)

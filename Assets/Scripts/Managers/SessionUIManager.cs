@@ -2,13 +2,14 @@ using TMPro;
 using Unity.Services.Multiplayer;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Threading.Tasks;
 
 public class SessionUIManager : MonoBehaviour
 {
-    public static bool IsAnyInputFocused => 
-        UIManager.Instance != null && 
+    public static bool IsAnyInputFocused =>
+        UIManager.Instance != null &&
         UIManager.Instance.SessionUIManager != null &&
-        UIManager.Instance.SessionUIManager.joinInputField != null && 
+        UIManager.Instance.SessionUIManager.joinInputField != null &&
         UIManager.Instance.SessionUIManager.joinInputField.isFocused;
 
     [Header("Lobby UI")]
@@ -22,14 +23,47 @@ public class SessionUIManager : MonoBehaviour
     [Header("Overlays")]
     [SerializeField] private GameObject loadingOverlay;
 
-    private void OnEnable()
+    private async void OnEnable()
     {
+        Debug.Log($"SessionUIManager OnEnable - SessionManager.Instance exists: {SessionManager.Instance != null}");
+
         if (SessionManager.Instance != null)
         {
-            SessionManager.Instance.OnSessionCreated += HandleSessionChanged;
-            SessionManager.Instance.OnSessionJoined += HandleSessionChanged;
-            SessionManager.Instance.OnBusyChanged += HandleBusyChanged;
+            SubscribeToEvents();
         }
+        else
+        {
+            Debug.Log("SessionManager not ready yet - waiting...");
+            await WaitForSessionManager();
+        }
+    }
+
+    private async Task WaitForSessionManager()
+    {
+        float timeout = 5f;
+        float elapsed = 0f;
+
+        while (elapsed < timeout)
+        {
+            if (SessionManager.Instance != null)
+            {
+                Debug.Log("SessionManager now available, subscribing to events");
+                SubscribeToEvents();
+                return;
+            }
+
+            await Task.Delay(100);
+            elapsed += 0.1f;
+        }
+
+        Debug.LogError("Failed to find SessionManager after timeout!");
+    }
+
+    private void SubscribeToEvents()
+    {
+        SessionManager.Instance.OnSessionCreated += HandleSessionChanged;
+        SessionManager.Instance.OnSessionJoined += HandleSessionChanged;
+        SessionManager.Instance.OnBusyChanged += HandleBusyChanged;
     }
 
     private void OnDestroy()
@@ -44,6 +78,7 @@ public class SessionUIManager : MonoBehaviour
 
     private void HandleSessionChanged(ISession session)
     {
+        Debug.Log($"HandleSessionChanged called with code: {session?.Code}");
         UpdateSessionCode(session);
         ShowLoading(false);
 
@@ -67,9 +102,19 @@ public class SessionUIManager : MonoBehaviour
 
     public void UpdateSessionCode(ISession session)
     {
-        if (session == null) return;
-        joinCodeText.text = $"Join Code: {session.Code}";
-        copyButton.gameObject.SetActive(true);
+        if (session == null)
+        {
+            Debug.LogError("UpdateSessionCode: session is null!");
+            return;
+        }
+
+        Debug.Log($"UpdateSessionCode: joinCodeText is null? {joinCodeText == null}");
+        if (joinCodeText != null)
+        {
+            joinCodeText.text = $"Join Code: {session.Code}";
+            copyButton.gameObject.SetActive(true);
+            Debug.Log($"Text set to: {joinCodeText.text}");
+        }
     }
 
     public void ClearSessionCode()

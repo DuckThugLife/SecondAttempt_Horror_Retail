@@ -4,24 +4,21 @@ using UnityEngine.SceneManagement;
 using Unity.Services.Core;
 using Unity.Services.Authentication;
 
-public class NetBootstrap : MonoBehaviour
+public class Bootstrapper : MonoBehaviour
 {
-    public static bool IsInitialized { get; private set; }
     public static event System.Action OnServicesInitialized;
+    public static bool ServicesInitialized { get; private set; }
 
     private async void Awake()
     {
-        if (IsInitialized)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
         DontDestroyOnLoad(gameObject);
-        await InitServices();
+        await InitializeServices();
+
+        Debug.Log("Services ready, loading LobbyScene...");
+        SceneManager.LoadScene("LobbyScene");
     }
 
-    private async Task InitServices()
+    private async Task InitializeServices()
     {
         try
         {
@@ -31,20 +28,13 @@ public class NetBootstrap : MonoBehaviour
             if (!AuthenticationService.Instance.IsSignedIn)
                 await AuthenticationService.Instance.SignInAnonymouslyAsync();
 
-            IsInitialized = true;
-
-            // Fire the event for any already-subscribed listeners
+            ServicesInitialized = true;
             OnServicesInitialized?.Invoke();
+            Debug.Log("Services initialized successfully");
         }
         catch (System.Exception e)
         {
             Debug.LogError($"Service Init Failed: {e.Message}");
         }
-    }
-
-    private void OnDestroy()
-    {
-        // Clear the event to prevent memory leaks
-        OnServicesInitialized = null;
     }
 }

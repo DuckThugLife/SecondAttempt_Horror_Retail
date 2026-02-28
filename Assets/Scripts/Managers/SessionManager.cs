@@ -36,10 +36,13 @@ public class SessionManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
-
+    
     private void OnEnable()
     {
-        NetBootstrap.OnServicesInitialized += HandleServicesReady;
+        Bootstrapper.OnServicesInitialized += HandleServicesReady;
+
+        if (Bootstrapper.ServicesInitialized)
+            HandleServicesReady();
 
         // Subscribe to network disconnect events
         if (NetworkManager.Singleton != null)
@@ -60,12 +63,31 @@ public class SessionManager : MonoBehaviour
             Debug.LogWarning("NetworkManager.Singleton is null in OnEnable - will try again later");
             Invoke(nameof(TrySubscribeToDisconnect), 0.5f);
         }
+    }
 
-        // If already initialized, handle it immediately
-        if (NetBootstrap.IsInitialized)
+    private void OnDisable()
+    {
+        Bootstrapper.OnServicesInitialized -= HandleServicesReady;
+
+        // Safely unsubscribe
+        if (NetworkManager.Singleton != null)
         {
-            HandleServicesReady();
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+
+            // Unregister message handler by setting to null
+            NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(
+                HostLeavingMessageName,
+                null
+            );
         }
+
+        CancelInvoke(nameof(TrySubscribeToDisconnect));
+    }
+
+    private async void HandleServicesReady()
+    {
+        Debug.Log("Services ready, hosting session...");
+        await HostSessionAsync();
     }
 
     private void TrySubscribeToDisconnect()
@@ -89,37 +111,8 @@ public class SessionManager : MonoBehaviour
         }
     }
 
-    private void OnDisable()
-    {
-        NetBootstrap.OnServicesInitialized -= HandleServicesReady;
 
-        // Safely unsubscribe
-        if (NetworkManager.Singleton != null)
-        {
-            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
 
-            // Unregister message handler by setting to null
-            NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(
-                HostLeavingMessageName,
-                null
-            );
-        }
-
-        CancelInvoke(nameof(TrySubscribeToDisconnect));
-    }
-
-    #endregion
-
-    #region Initialization
-
-    private async void HandleServicesReady()
-    {
-        // Small delay to ensure scene is loaded
-        await Task.Delay(100);
-
-        SceneManager.LoadScene("LobbyScene");
-        await HostSessionAsync();
-    }
 
     #endregion
 
@@ -127,11 +120,11 @@ public class SessionManager : MonoBehaviour
 
     public async Task HostSessionAsync(int maxPlayers = 4)
     {
-        Debug.Log($"HostSessionAsync STARTED - Busy: {_isBusy}, Initialized: {NetBootstrap.IsInitialized}");
+        Debug.Log($"HostSessionAsync STARTED - Busy: {_isBusy}, Initialized: {Bootstrapper.ServicesInitialized}");
 
-        if (_isBusy || !NetBootstrap.IsInitialized)
+        if (_isBusy || !Bootstrapper.ServicesInitialized)
         {
-            Debug.Log($"HostSessionAsync skipped - Busy: {_isBusy}, Initialized: {NetBootstrap.IsInitialized}");
+            Debug.Log($"HostSessionAsync skipped - Busy: {_isBusy}, Initialized: {Bootstrapper.ServicesInitialized}");
             return;
         }
 

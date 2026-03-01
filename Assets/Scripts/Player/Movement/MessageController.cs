@@ -20,6 +20,12 @@ public class MessageController : MonoBehaviour
     [SerializeField] private TMP_InputField chatInput;
     [SerializeField] private int maxMessageHistory = 10;
 
+
+    [SerializeField] private int maxMessageLength = 100;
+    [SerializeField] private TMP_Text characterCountText;
+    [SerializeField] private int warningThreshold = 20; // Show counter when __ chars left
+
+
     [Header("Chat Settings")]
     [SerializeField] private bool chatVisibleByDefault = false; // False for horror mode
     [SerializeField] private float visibleDuration = 5f;
@@ -139,10 +145,36 @@ public class MessageController : MonoBehaviour
 
     private void OnChatInputChanged(string newValue)
     {
-        if (!newValue.EndsWith("\n")) return;
-        string newMessage = newValue.Remove(newValue.Length - 1);
+        int remaining = maxMessageLength - newValue.Length;
 
-        if (!string.IsNullOrWhiteSpace(newMessage))
+        // Show counter only when near limit
+        if (characterCountText != null)
+        {
+            bool showCounter = remaining <= warningThreshold;
+            characterCountText.gameObject.SetActive(showCounter);
+
+            if (showCounter)
+            {
+                characterCountText.text = $"{remaining}";
+                characterCountText.color = remaining <= 0 ? Color.red : Color.white;
+            }
+        }
+
+        // Block typing at limit
+        if (newValue.Length > maxMessageLength && newValue.Length > chatInput.text.Length)
+        {
+            chatInput.text = chatInput.text.Substring(0, maxMessageLength);
+            chatInput.caretPosition = maxMessageLength;
+
+            if (characterCountText != null)
+                characterCountText.text = "0";
+            return;
+        }
+
+        if (!newValue.EndsWith("\n")) return;
+
+        string newMessage = newValue.Remove(newValue.Length - 1);
+        if (!string.IsNullOrWhiteSpace(newMessage) && newMessage.Length <= maxMessageLength)
             MessageManager.Instance.SendMessageServerRPC(newMessage);
 
         Clear();

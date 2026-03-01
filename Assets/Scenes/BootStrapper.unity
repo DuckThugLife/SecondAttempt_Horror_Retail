@@ -119,18 +119,11 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!225 &128305538
+--- !u!225 &128305538 stripped
 CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 6133304141903570063, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+  m_PrefabInstance: {fileID: 1380361390}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1380361394}
-  m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -405,6 +398,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &798087074 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5251577333322570973, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+  m_PrefabInstance: {fileID: 1380361390}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &816286914
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -737,17 +741,49 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 2094295427}
-    - target: {fileID: 1041272772930027449, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: JoinSessionWithCode
+    - target: {fileID: 2125740414917764934, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2336054182634605905, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 2094295427}
-    - target: {fileID: 2336054182634605905, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnLeaveButtonClicked
+    - target: {fileID: 2713736274214070756, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2713736274214070756, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2713736274214070756, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4667663508436835992, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4667663508436835992, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4667663508436835992, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: -12
+      objectReference: {fileID: 0}
+    - target: {fileID: 4993625476420243263, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -0.000030517578
+      objectReference: {fileID: 0}
+    - target: {fileID: 5251577333322570973, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_text
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 5669569487275224238, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8040604167661538135, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
       propertyPath: m_Pivot.x
@@ -833,10 +869,6 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 2094295427}
-    - target: {fileID: 8083600298834016755, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: CopyJoinCode
-      objectReference: {fileID: 0}
     - target: {fileID: 8813452962057418602, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
       propertyPath: m_Name
       value: PlayerCanvas
@@ -844,10 +876,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2125740414917764934, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 128305538}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
 --- !u!114 &1380361391 stripped
 MonoBehaviour:
@@ -1078,6 +1107,9 @@ MonoBehaviour:
   chatMessagePrefab: {fileID: 1191903523804228829, guid: fc6a685378d234041866b0fb6017e9ed, type: 3}
   chatInput: {fileID: 1380361391}
   maxMessageHistory: 10
+  maxMessageLength: 100
+  characterCountText: {fileID: 798087074}
+  warningThreshold: 20
   chatVisibleByDefault: 1
   visibleDuration: 3
   chatLogCanvasGroup: {fileID: 128305538}
@@ -1095,6 +1127,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  maxMessageLength: 100
 --- !u!114 &1411580437
 MonoBehaviour:
   m_ObjectHideFlags: 0

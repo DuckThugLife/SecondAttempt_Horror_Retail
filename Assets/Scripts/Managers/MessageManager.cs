@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class MessageManager : NetworkBehaviour
 {
     public static MessageManager Instance;
+    [SerializeField] private int maxMessageLength = 100; // Same default
 
     private void Awake()
     {
@@ -32,6 +33,10 @@ public class MessageManager : NetworkBehaviour
     public void SendMessageServerRPC(string message, ServerRpcParams serverRpcParams = default)
     {
         if (string.IsNullOrEmpty(message)) return;
+
+        // Server-side validation using same limit as the MessageController
+        if (message.Length > maxMessageLength)
+            message = message.Substring(0, maxMessageLength);
 
         ulong clientId = serverRpcParams.Receive.SenderClientId;
         Player player = NetworkObjectManager.Instance.GetPlayer(clientId);

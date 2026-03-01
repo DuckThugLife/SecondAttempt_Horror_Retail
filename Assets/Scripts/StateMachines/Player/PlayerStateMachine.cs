@@ -19,7 +19,6 @@ public class PlayerStateMachine : NetworkBehaviour
     public PlayerDeadState DeadState { get; private set; }
     public LobbyMenuState LobbyMenuState { get; private set; }
     public PlayerLoadingState LoadingState { get; private set; }
-    public ChatState ChatState { get; private set; }
 
     public PlayerState CurrentState => _stateStack.Count > 0 ? _stateStack.Peek() : null;
 
@@ -30,7 +29,6 @@ public class PlayerStateMachine : NetworkBehaviour
         DeadState = new PlayerDeadState(this);
         LobbyMenuState = new LobbyMenuState(this);
         LoadingState = new PlayerLoadingState(this);
-        ChatState = new ChatState(this);
     }
 
     public override void OnNetworkSpawn()
@@ -51,8 +49,6 @@ public class PlayerStateMachine : NetworkBehaviour
     private void Update()
     {
         if (!IsOwner) return;
-
-        HandleGlobalInput();
         CurrentState?.Tick();
     }
 
@@ -127,15 +123,4 @@ public class PlayerStateMachine : NetworkBehaviour
         PushState(LobbyMenuState);
     }
 
-    private void HandleGlobalInput()
-    {
-        if (PlayerInputHandler.LastKeyPressed == Key.Enter)
-        {
-            if (!(CurrentState is BaseUIState))
-            {
-                PushState(ChatState);
-            }
-            PlayerInputHandler.ResetLastKey();
-        }
-    }
 }

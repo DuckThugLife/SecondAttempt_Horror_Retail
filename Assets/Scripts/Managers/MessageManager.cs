@@ -43,6 +43,12 @@ public class MessageManager : NetworkBehaviour
         ReplicateMessageClientRPC($"{player.GetUsernameNetworkVar().Value}: {message}");
     }
 
+    [ServerRpc(RequireOwnership = false)]
+    public void SendSystemMessageServerRPC(string message)
+    {
+        ReplicateMessageClientRPC(message);
+    }
+
     private bool CheckForCommand(ulong clientId, string message)
     {
         if (!message.StartsWith("/"))

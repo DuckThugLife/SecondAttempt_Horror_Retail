@@ -14,6 +14,15 @@ public class Bootstrapper : MonoBehaviour
         DontDestroyOnLoad(gameObject);
         await InitializeServices();
 
+        // Set local player name BEFORE loading scene
+        if (AuthenticationService.Instance.IsSignedIn)
+        {
+            string playerName = $"Player{AuthenticationService.Instance.PlayerId}";
+            PlayerPrefs.SetString("PlayerName", playerName);
+            PlayerPrefs.Save();
+            Debug.Log($"Bootstrapper: Saved player name {playerName}");
+        }
+
         Debug.Log("Services ready, loading LobbyScene...");
         SceneManager.LoadScene("LobbyScene");
     }

@@ -119,6 +119,18 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!225 &128305538
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1380361394}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -559,6 +571,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &862794541 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 422693846223026964, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+  m_PrefabInstance: {fileID: 1380361390}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1004776960
 GameObject:
   m_ObjectHideFlags: 0
@@ -827,14 +844,17 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2125740414917764934, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 128305538}
   m_SourcePrefab: {fileID: 100100000, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
 --- !u!114 &1380361391 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2265730491151178587, guid: 5e492721d56f73240be5b4ee8380d249, type: 3}
   m_PrefabInstance: {fileID: 1380361390}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 862794541}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2da0c512f12947e489f739169773d7ca, type: 3}
@@ -1051,12 +1071,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d65be7adf27164c73b189bd14d5885ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chatParent: {fileID: 1380361394}
+  chatLogPanel: {fileID: 1380361394}
+  chatInputPanel: {fileID: 862794541}
   scrollRect: {fileID: 1380361393}
   scrollContent: {fileID: 1380361392}
   chatMessagePrefab: {fileID: 1191903523804228829, guid: fc6a685378d234041866b0fb6017e9ed, type: 3}
   chatInput: {fileID: 1380361391}
   maxMessageHistory: 10
+  chatVisibleByDefault: 1
+  visibleDuration: 3
+  chatLogCanvasGroup: {fileID: 128305538}
+  fadedAlpha: 0
 --- !u!114 &1411580436
 MonoBehaviour:
   m_ObjectHideFlags: 0

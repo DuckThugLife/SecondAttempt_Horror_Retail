@@ -411,9 +411,15 @@ public class SessionManager : MonoBehaviour
     {
         Debug.Log($"OnClientDisconnected called - ClientId: {clientId}, IsHost: {IsHost}");
 
-        // If we're not the host and we got disconnected (any clientId means host left)
         if (!IsHost)
         {
+            // Force exit UI state
+            if (PlayerStateMachine.LocalInstance != null &&
+                PlayerStateMachine.LocalInstance.GetCurrentState() is BaseUIState)
+            {
+                PlayerStateMachine.LocalInstance.ChangeState(PlayerStateMachine.LocalInstance.LobbyState);
+            }
+
             Debug.Log("Disconnected from host - falling back to new host session");
             OnHostDisconnected?.Invoke();
             _ = HandleHostDisconnectAsync();
@@ -430,6 +436,14 @@ public class SessionManager : MonoBehaviour
     private async Task HandleHostDisconnectAsync()
     {
         Debug.Log("Handling host disconnect - START");
+
+        // Force exit UI state before anything else
+        if (PlayerStateMachine.LocalInstance != null &&
+            PlayerStateMachine.LocalInstance.GetCurrentState() is BaseUIState)
+        {
+            PlayerStateMachine.LocalInstance.ChangeState(PlayerStateMachine.LocalInstance.LobbyState);
+        }
+
         SetBusy(true);
 
         try

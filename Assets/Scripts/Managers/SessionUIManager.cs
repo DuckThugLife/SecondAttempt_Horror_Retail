@@ -3,6 +3,7 @@ using Unity.Services.Multiplayer;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Threading.Tasks;
+using Unity.Netcode;
 
 public class SessionUIManager : MonoBehaviour
 {
@@ -30,6 +31,13 @@ public class SessionUIManager : MonoBehaviour
         if (SessionManager.Instance != null)
         {
             SubscribeToEvents();
+
+            // Subscribe to network events for player count changes
+            if (NetworkManager.Singleton != null)
+            {
+                NetworkManager.Singleton.OnClientConnectedCallback += OnClientCountChanged;
+                NetworkManager.Singleton.OnClientDisconnectCallback += OnClientCountChanged;
+            }
         }
         else
         {
@@ -49,6 +57,13 @@ public class SessionUIManager : MonoBehaviour
             {
                 Debug.Log("SessionManager now available, subscribing to events");
                 SubscribeToEvents();
+
+                // Subscribe to network events for player count changes
+                if (NetworkManager.Singleton != null)
+                {
+                    NetworkManager.Singleton.OnClientConnectedCallback += OnClientCountChanged;
+                    NetworkManager.Singleton.OnClientDisconnectCallback += OnClientCountChanged;
+                }
                 return;
             }
 
@@ -74,6 +89,42 @@ public class SessionUIManager : MonoBehaviour
             SessionManager.Instance.OnSessionJoined -= HandleSessionChanged;
             SessionManager.Instance.OnBusyChanged -= HandleBusyChanged;
         }
+
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientCountChanged;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientCountChanged;
+        }
+    }
+
+    private void OnClientCountChanged(ulong clientId)
+    {
+        UpdateLeaveButtonVisibility();
+    }
+
+    private void UpdateLeaveButtonVisibility()
+    {
+        if (leaveButton == null) return;
+
+        bool isHost = SessionManager.Instance != null && SessionManager.Instance.IsHost;
+        int playerCount = NetworkManager.Singleton?.ConnectedClients?.Count ?? 1;
+
+        if (isHost)
+        {
+            // Host can only leave if there are other players connected
+            leaveButton.gameObject.SetActive(playerCount > 1);
+
+            // Optional: Change button text based on player count
+            // if (playerCount > 1)
+            //     leaveButton.GetComponentInChildren<TMP_Text>().text = "Disband Lobby";
+            // else
+            //     leaveButton.GetComponentInChildren<TMP_Text>().text = "Leave";
+        }
+        else
+        {
+            // Clients can always leave
+            leaveButton.gameObject.SetActive(true);
+        }
     }
 
     private void HandleSessionChanged(ISession session)
@@ -81,6 +132,7 @@ public class SessionUIManager : MonoBehaviour
         Debug.Log($"HandleSessionChanged called with code: {session?.Code}");
         UpdateSessionCode(session);
         ShowLoading(false);
+        UpdateLeaveButtonVisibility();
 
         bool isHost = SessionManager.Instance != null && SessionManager.Instance.IsHost;
         if (joinInputField != null)
@@ -150,7 +202,7 @@ public class SessionUIManager : MonoBehaviour
     {
         // First exit UI state
         if (PlayerStateMachine.LocalInstance != null &&
-            PlayerStateMachine.LocalInstance.GetCurrentState() is BaseUIState) // Use BaseUIState to catch any UI
+            PlayerStateMachine.LocalInstance.GetCurrentState() is BaseUIState)
         {
             PlayerStateMachine.LocalInstance.ChangeState(PlayerStateMachine.LocalInstance.LobbyState);
         }

@@ -9,6 +9,7 @@ public class Player : NetworkBehaviour
 {
     public static Player Local;
 
+    // Server-only write permission for security
     private NetworkVariable<FixedString64Bytes> usernameNetworkVar
         = new NetworkVariable<FixedString64Bytes>(writePerm: NetworkVariableWritePermission.Server);
 
@@ -21,12 +22,12 @@ public class Player : NetworkBehaviour
         if (IsOwner)
         {
             Local = this;
+        }
 
-            // Set default username if not already set
-            if (string.IsNullOrEmpty(usernameNetworkVar.Value.ToString()))
-            {
-                SetUsername($"Player{OwnerClientId}");
-            }
+        // Only the server sets default usernames
+        if (IsServer && string.IsNullOrEmpty(usernameNetworkVar.Value.ToString()))
+        {
+            usernameNetworkVar.Value = $"Player{OwnerClientId}";
         }
     }
 
@@ -45,14 +46,46 @@ public class Player : NetworkBehaviour
         return usernameNetworkVar;
     }
 
+    // ServerRPC for clients to request username changes
     [ServerRpc(RequireOwnership = true)]
-    private void SetUsernameServerRPC(FixedString64Bytes newUsername)
+    private void RequestUsernameChangeServerRPC(FixedString64Bytes requestedUsername)
     {
-        SetUsername(newUsername.ToString());
+        // SERVER-SIDE VALIDATION
+        string username = requestedUsername.ToString();
+
+        // Basic validation
+        if (string.IsNullOrWhiteSpace(username) || username.Length > 20)
+        {
+            // Invalid - assign default
+            usernameNetworkVar.Value = $"Player{OwnerClientId}";
+            return;
+        }
+
+        // Check for profanity
+        if (ContainsProfanity(username))
+        {
+            usernameNetworkVar.Value = $"Player{OwnerClientId}";
+            return;
+        }
+
+        // All checks passed - set the username
+        usernameNetworkVar.Value = username;
     }
 
-    public void SetUsername(string newUsername)
+    private bool ContainsProfanity(string username)
     {
-        usernameNetworkVar.Value = newUsername;
+
+        // I Could check against a list, use a service, etc.
+        return false; // Placeholder
+    }
+
+    // Public method for players to request a username change
+    public void RequestUsernameChange(string newUsername)
+    {
+        if (IsOwner)
+        {
+            // Always go through server for validation
+            RequestUsernameChangeServerRPC(newUsername);
+        }
     }
 }

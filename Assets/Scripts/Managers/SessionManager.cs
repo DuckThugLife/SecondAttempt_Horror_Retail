@@ -36,7 +36,7 @@ public class SessionManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
-    
+
     private void OnEnable()
     {
         Bootstrapper.OnServicesInitialized += HandleServicesReady;
@@ -65,31 +65,6 @@ public class SessionManager : MonoBehaviour
         }
     }
 
-    private void OnDisable()
-    {
-        Bootstrapper.OnServicesInitialized -= HandleServicesReady;
-
-        // Safely unsubscribe
-        if (NetworkManager.Singleton != null)
-        {
-            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
-
-            // Unregister message handler by setting to null
-            NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(
-                HostLeavingMessageName,
-                null
-            );
-        }
-
-        CancelInvoke(nameof(TrySubscribeToDisconnect));
-    }
-
-    private async void HandleServicesReady()
-    {
-        Debug.Log("Services ready, hosting session...");
-        await HostSessionAsync();
-    }
-
     private void TrySubscribeToDisconnect()
     {
         if (NetworkManager.Singleton != null)
@@ -111,8 +86,34 @@ public class SessionManager : MonoBehaviour
         }
     }
 
+    private void OnDisable()
+    {
+        Bootstrapper.OnServicesInitialized -= HandleServicesReady;
 
+        // Safely unsubscribe
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
 
+            // Unregister message handler by setting to null
+            NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(
+                HostLeavingMessageName,
+                null
+            );
+        }
+
+        CancelInvoke(nameof(TrySubscribeToDisconnect));
+    }
+
+    #endregion
+
+    #region Initialization
+
+    private async void HandleServicesReady()
+    {
+        Debug.Log("Services ready, hosting session...");
+        await HostSessionAsync();
+    }
 
     #endregion
 
@@ -131,36 +132,68 @@ public class SessionManager : MonoBehaviour
         SetBusy(true);
         Debug.Log("HostSessionAsync - SetBusy(true) completed");
 
-        try
+        // Don't catch here - let exceptions bubble up to retry logic
+        Debug.Log("HostSessionAsync - Cleaning up network session...");
+        await CleanupNetworkSessionAsync();
+        Debug.Log("HostSessionAsync - Cleanup complete");
+
+        Debug.Log("HostSessionAsync - Creating new session...");
+        _currentSession = await CreateNewSessionAsync(maxPlayers); // This will throw on rate limit
+        Debug.Log($"HostSessionAsync - Session created with code: {_currentSession?.Code}");
+
+        Debug.Log("HostSessionAsync - Starting host...");
+        StartHostIfNeeded();
+        Debug.Log("HostSessionAsync - Host started");
+
+        Debug.Log("HostSessionAsync - Invoking OnSessionCreated event");
+        OnSessionCreated?.Invoke(_currentSession);
+
+        Debug.Log("HostSessionAsync - COMPLETE - Player should spawn");
+
+        SetBusy(false);
+        Debug.Log("HostSessionAsync - SetBusy(false) completed");
+    }
+
+    private async Task<bool> TryHostWithRetryAsync(int maxRetries = 5)
+    {
+        int retryCount = 0;
+        int baseDelay = 1000; // Start with 1 second
+
+        while (retryCount < maxRetries)
         {
-            Debug.Log("HostSessionAsync - Cleaning up network session...");
-            await CleanupNetworkSessionAsync();
-            Debug.Log("HostSessionAsync - Cleanup complete");
+            try
+            {
+                // Ensure we're not busy before trying
+                SetBusy(false);
 
-            Debug.Log("HostSessionAsync - Creating new session...");
-            _currentSession = await CreateNewSessionAsync(maxPlayers);
-            Debug.Log($"HostSessionAsync - Session created with code: {_currentSession?.Code}");
+                await HostSessionAsync();
+                return true; // Success!
+            }
+            catch (Exception e) when (e.Message.Contains("Too Many Requests") || e.Message.Contains("Rate"))
+            {
+                retryCount++;
 
-            Debug.Log("HostSessionAsync - Starting host...");
-            StartHostIfNeeded();
-            Debug.Log("HostSessionAsync - Host started");
+                // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+                int delayMs = baseDelay * (int)Math.Pow(2, retryCount - 1);
+                Debug.Log($"Rate limited. Retry {retryCount}/{maxRetries} in {delayMs / 1000}s");
 
-            Debug.Log("HostSessionAsync - Invoking OnSessionCreated event");
-            OnSessionCreated?.Invoke(_currentSession);
+                // Make sure we're not busy for the next attempt
+                SetBusy(false);
 
-            Debug.Log("HostSessionAsync - COMPLETE - Player should spawn");
+                await Task.Delay(delayMs);
+            }
+            catch (Exception e)
+            {
+                // Different error - fail immediately
+                Debug.LogError($"Host failed: {e.Message}");
+                SetBusy(false);
+                return false;
+            }
         }
-        catch (Exception e)
-        {
-            Debug.LogError($"HostSessionAsync FAILED: {e.Message}");
-            Debug.LogError($"Stack trace: {e.StackTrace}");
-            _currentSession = null;
-        }
-        finally
-        {
-            SetBusy(false);
-            Debug.Log("HostSessionAsync - SetBusy(false) completed");
-        }
+
+        Debug.LogError("Max retries exceeded - giving up");
+        SetBusy(false);
+        return false;
     }
 
     private async Task CleanupNetworkSessionAsync()
@@ -246,11 +279,36 @@ public class SessionManager : MonoBehaviour
         }
         catch (Exception joinEx)
         {
-            await HandleJoinFailureAsync(joinEx, newCode, oldCode, hadPreviousSession);
+            await HandleJoinFailureAsync(joinEx, newCode);
         }
         finally
         {
             SetBusy(false);
+        }
+    }
+
+    private async Task LeaveCurrentSessionIfAny()
+    {
+        if (_currentSession == null)
+            return;
+
+        try
+        {
+            Debug.Log($"Leaving session: {_currentSession.Code}");
+            await _currentSession.LeaveAsync();
+            Debug.Log("LeaveAsync completed");
+        }
+        catch (Exception leaveEx)
+        {
+            Debug.LogWarning($"Failed to leave session: {leaveEx.Message}");
+        }
+
+        _currentSession = null;
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        {
+            NetworkManager.Singleton.Shutdown();
+            Debug.Log("Network shutdown after leave");
         }
     }
 
@@ -272,45 +330,18 @@ public class SessionManager : MonoBehaviour
         Debug.Log("Successfully joined new session!");
     }
 
-    private async Task HandleJoinFailureAsync(Exception joinEx, string newCode, string oldCode, bool hadPreviousSession)
+    private async Task HandleJoinFailureAsync(Exception joinEx, string newCode)
     {
         Debug.LogWarning($"Failed to join new session ({newCode}): {joinEx.Message}");
 
         await Task.Delay(1000);
 
-        if (hadPreviousSession && await TryRejoinOldSessionAsync(oldCode))
-            return;
-
+        // Skip old lobby rejoin - go straight to hosting new session
         // Reset busy flag before hosting fallback
         SetBusy(false);
 
         Debug.Log("Falling back to hosting new session");
-        await HostSessionAsync();
-    }
-
-    private async Task<bool> TryRejoinOldSessionAsync(string oldCode)
-    {
-        if (string.IsNullOrEmpty(oldCode))
-            return false;
-
-        try
-        {
-            Debug.Log($"Attempting to rejoin previous session: {oldCode}");
-            _currentSession = await MultiplayerService.Instance.JoinSessionByCodeAsync(oldCode);
-
-            if (NetworkManager.Singleton != null && !NetworkManager.Singleton.IsListening)
-                NetworkManager.Singleton.StartClient();
-
-            OnSessionJoined?.Invoke(_currentSession);
-
-            Debug.Log("Rejoined previous session.");
-            return true;
-        }
-        catch (Exception oldJoinEx)
-        {
-            Debug.LogWarning($"Failed to rejoin previous session ({oldCode}): {oldJoinEx.Message}");
-            return false;
-        }
+        await TryHostWithRetryAsync(); // Use retry logic here too
     }
 
     #endregion
@@ -320,6 +351,13 @@ public class SessionManager : MonoBehaviour
     public async Task LeaveSessionAsync()
     {
         SetBusy(true);
+
+        // Force exit UI state before leaving
+        if (PlayerStateMachine.LocalInstance != null &&
+            PlayerStateMachine.LocalInstance.GetCurrentState() is BaseUIState)
+        {
+            PlayerStateMachine.LocalInstance.ChangeState(PlayerStateMachine.LocalInstance.LobbyState);
+        }
 
         try
         {
@@ -355,33 +393,8 @@ public class SessionManager : MonoBehaviour
             SetBusy(false);
             SceneManager.LoadScene("LobbyScene");
 
-            // Host a new session after returning to lobby
-            await HostSessionAsync();
-        }
-    }
-
-    private async Task LeaveCurrentSessionIfAny()
-    {
-        if (_currentSession == null)
-            return;
-
-        try
-        {
-            Debug.Log($"Leaving session: {_currentSession.Code}");
-            await _currentSession.LeaveAsync();
-            Debug.Log("LeaveAsync completed");
-        }
-        catch (Exception leaveEx)
-        {
-            Debug.LogWarning($"Failed to leave session: {leaveEx.Message}");
-        }
-
-        _currentSession = null;
-
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
-        {
-            NetworkManager.Singleton.Shutdown();
-            Debug.Log("Network shutdown after leave");
+            // Host a new session after returning to lobby with retry logic
+            await TryHostWithRetryAsync();
         }
     }
 
@@ -411,6 +424,7 @@ public class SessionManager : MonoBehaviour
     {
         Debug.Log($"OnClientDisconnected called - ClientId: {clientId}, IsHost: {IsHost}");
 
+        // If we're not the host and we got disconnected (any clientId means host left)
         if (!IsHost)
         {
             // Force exit UI state
@@ -436,14 +450,6 @@ public class SessionManager : MonoBehaviour
     private async Task HandleHostDisconnectAsync()
     {
         Debug.Log("Handling host disconnect - START");
-
-        // Force exit UI state before anything else
-        if (PlayerStateMachine.LocalInstance != null &&
-            PlayerStateMachine.LocalInstance.GetCurrentState() is BaseUIState)
-        {
-            PlayerStateMachine.LocalInstance.ChangeState(PlayerStateMachine.LocalInstance.LobbyState);
-        }
-
         SetBusy(true);
 
         try
@@ -470,9 +476,9 @@ public class SessionManager : MonoBehaviour
             // Set busy to false BEFORE hosting
             SetBusy(false);
 
-            // Host a new session
+            // Host a new session with retry logic
             Debug.Log("Hosting new session after host disconnect");
-            await HostSessionAsync();
+            await TryHostWithRetryAsync();
         }
         catch (Exception e)
         {

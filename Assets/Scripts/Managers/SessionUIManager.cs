@@ -148,6 +148,14 @@ public class SessionUIManager : MonoBehaviour
 
     public void OnLeaveButtonClicked()
     {
+        // First exit UI state
+        if (PlayerStateMachine.LocalInstance != null &&
+            PlayerStateMachine.LocalInstance.GetCurrentState() is BaseUIState) // Use BaseUIState to catch any UI
+        {
+            PlayerStateMachine.LocalInstance.ChangeState(PlayerStateMachine.LocalInstance.LobbyState);
+        }
+
+        // Then leave session
         if (SessionManager.Instance != null)
             _ = SessionManager.Instance.LeaveSessionAsync();
     }

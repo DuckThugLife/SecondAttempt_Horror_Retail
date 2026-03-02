@@ -8,7 +8,7 @@ using UnityEngine.UI;
 public class MessageManager : NetworkBehaviour
 {
     public static MessageManager Instance;
-    [SerializeField] private int maxMessageLength = 100; // Same default
+    [SerializeField] private int maxMessageLength = 200; // Same default as the MessageController
 
     private void Awake()
     {

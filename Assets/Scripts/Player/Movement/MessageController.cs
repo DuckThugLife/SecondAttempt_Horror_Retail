@@ -21,7 +21,7 @@ public class MessageController : MonoBehaviour
     [SerializeField] private int maxMessageHistory = 10;
 
 
-    [SerializeField] private int maxMessageLength = 100;
+    [SerializeField] private int maxMessageLength = 200;
     [SerializeField] private TMP_Text characterCountText;
     [SerializeField] private int warningThreshold = 20; // Show counter when __ chars left
 
@@ -147,7 +147,6 @@ public class MessageController : MonoBehaviour
     {
         int remaining = maxMessageLength - newValue.Length;
 
-        // Show counter only when near limit
         if (characterCountText != null)
         {
             bool showCounter = remaining <= warningThreshold;
@@ -160,7 +159,6 @@ public class MessageController : MonoBehaviour
             }
         }
 
-        // Block typing at limit
         if (newValue.Length > maxMessageLength && newValue.Length > chatInput.text.Length)
         {
             chatInput.text = chatInput.text.Substring(0, maxMessageLength);
@@ -176,6 +174,9 @@ public class MessageController : MonoBehaviour
         string newMessage = newValue.Remove(newValue.Length - 1);
         if (!string.IsNullOrWhiteSpace(newMessage) && newMessage.Length <= maxMessageLength)
             MessageManager.Instance.SendMessageServerRPC(newMessage);
+
+        // Clear the Enter key press to prevent immediate reopening
+        localPlayer?.PlayerInputHandler.ResetLastKey();
 
         Clear();
         CloseChatInput();

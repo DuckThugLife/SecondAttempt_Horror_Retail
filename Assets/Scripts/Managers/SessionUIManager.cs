@@ -21,8 +21,51 @@ public class SessionUIManager : MonoBehaviour
     [SerializeField] private Button leaveButton;
     [SerializeField] private Button joinButton;
 
+    [Header("Settings Menu")]
+    [SerializeField] private GameObject settingsPanel;
+    [SerializeField] private Button closeButton;
+
+    [Header("Name Change")]
+    [SerializeField] private TMP_InputField nameChangeInput;
+    [SerializeField] private Button saveNameChangeButton;
+
     [Header("Overlays")]
     [SerializeField] private GameObject loadingOverlay;
+
+
+    private void Start()
+    {
+        // Wire up buttons if not done in inspector
+        if (closeButton != null)
+            closeButton.onClick.AddListener(CloseSettings);
+
+        if (saveNameChangeButton != null)
+            saveNameChangeButton.onClick.AddListener(OnChangeNameClicked);
+
+        // Start with settings closed
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
+    }
+
+    public void OpenSettings()
+    {
+        settingsPanel.SetActive(true);
+        UIManager.Instance.SetUIEnabled(true); 
+    }
+
+    public void CloseSettings()
+    {
+        settingsPanel.SetActive(false);
+        UIManager.Instance.SetUIEnabled(false);
+    }
+
+    public void ToggleSettings()
+    {
+        if (settingsPanel.activeSelf)
+            CloseSettings();
+        else
+            OpenSettings();
+    }
 
     private async void OnEnable()
     {
@@ -32,7 +75,6 @@ public class SessionUIManager : MonoBehaviour
         {
             SubscribeToEvents();
 
-            // Subscribe to network events for player count changes
             if (NetworkManager.Singleton != null)
             {
                 NetworkManager.Singleton.OnClientConnectedCallback += OnClientCountChanged;
@@ -58,7 +100,6 @@ public class SessionUIManager : MonoBehaviour
                 Debug.Log("SessionManager now available, subscribing to events");
                 SubscribeToEvents();
 
-                // Subscribe to network events for player count changes
                 if (NetworkManager.Singleton != null)
                 {
                     NetworkManager.Singleton.OnClientConnectedCallback += OnClientCountChanged;
@@ -111,18 +152,10 @@ public class SessionUIManager : MonoBehaviour
 
         if (isHost)
         {
-            // Host can only leave if there are other players connected
             leaveButton.gameObject.SetActive(playerCount > 1);
-
-            // Optional: Change button text based on player count
-            // if (playerCount > 1)
-            //     leaveButton.GetComponentInChildren<TMP_Text>().text = "Disband Lobby";
-            // else
-            //     leaveButton.GetComponentInChildren<TMP_Text>().text = "Leave";
         }
         else
         {
-            // Clients can always leave
             leaveButton.gameObject.SetActive(true);
         }
     }
@@ -200,15 +233,39 @@ public class SessionUIManager : MonoBehaviour
 
     public void OnLeaveButtonClicked()
     {
-        // First exit UI state
         if (PlayerStateMachine.LocalInstance != null &&
             PlayerStateMachine.LocalInstance.GetCurrentState() is BaseUIState)
         {
             PlayerStateMachine.LocalInstance.ChangeState(PlayerStateMachine.LocalInstance.LobbyState);
         }
 
-        // Then leave session
         if (SessionManager.Instance != null)
             _ = SessionManager.Instance.LeaveSessionAsync();
+    }
+
+    public void OnChangeNameClicked()
+    {
+        if (Player.Local == null) return;
+
+        string newName = nameChangeInput.text.Trim();
+        if (!string.IsNullOrEmpty(newName))
+        {
+            string oldName = Player.Local.GetUsernameNetworkVar().Value.ToString();
+
+            // Request name change
+            Player.Local.RequestUsernameChange(newName);
+
+            // Save to PlayerPrefs
+            PlayerPrefs.SetString("PlayerName", newName);
+            PlayerPrefs.Save();
+
+            // Broadcast name change via message system (same as /name command)
+            MessageManager.Instance?.SendSystemMessageServerRPC(
+                $"<color=yellow>{oldName} changed name to {newName}</color>"
+            );
+
+            nameChangeInput.text = "";
+            Debug.Log($"Name changed to: {newName}");
+        }
     }
 }

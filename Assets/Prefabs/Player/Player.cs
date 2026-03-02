@@ -33,7 +33,7 @@ public class Player : NetworkBehaviour
         {
             Local = this;
 
-            // Use pre-set name from Bootstrapper
+            // Always use current PlayerPrefs name (could have been changed)
             string savedName = PlayerPrefs.GetString("PlayerName", $"Player{OwnerClientId}");
             Debug.Log($"[Player {OwnerClientId}] Requesting username: {savedName}");
             RequestUsernameChangeServerRPC(savedName);
@@ -116,4 +116,6 @@ public class Player : NetworkBehaviour
             RequestUsernameChangeServerRPC(newUsername);
         }
     }
+
+
 }

@@ -49,6 +49,18 @@ public class PlayerStateMachine : NetworkBehaviour
     private void Update()
     {
         if (!IsOwner) return;
+
+        // Global ESC to toggle settings (if not in another UI)
+        if (PlayerInputHandler.LastKeyPressed == Key.Escape)
+        {
+            // Don't toggle if in lobby menu or loading
+            if (!(CurrentState is LobbyMenuState) && !(CurrentState is PlayerLoadingState))
+            {
+                UIManager.Instance.SessionUIManager.ToggleSettings();
+            }
+            PlayerInputHandler.ResetLastKey();
+        }
+
         CurrentState?.Tick();
     }
 
@@ -81,11 +93,6 @@ public class PlayerStateMachine : NetworkBehaviour
         _stateStack.Push(newState);
         newState.Enter();
         Debug.Log($"Changed to state: {newState.GetType().Name}");
-    }
-
-    public void RevertToPreviousState()
-    {
-        // Not needed with stack
     }
 
     public PlayerState GetCurrentState() => CurrentState;

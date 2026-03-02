@@ -169,13 +169,19 @@ public class SessionManager : MonoBehaviour
                 await HostSessionAsync();
                 return true; // Success!
             }
-            catch (Exception e) when (e.Message.Contains("Too Many Requests") || e.Message.Contains("Rate"))
+            catch (Exception e) when (
+                e.Message.Contains("Too Many Requests") ||
+                e.Message.Contains("Rate") ||
+                e.Message.Contains("Unable to read data") ||
+                e.Message.Contains("timeout") ||
+                e.Message.Contains("connection")
+            )
             {
                 retryCount++;
 
                 // Exponential backoff: 1s, 2s, 4s, 8s, 16s
                 int delayMs = baseDelay * (int)Math.Pow(2, retryCount - 1);
-                Debug.Log($"Rate limited. Retry {retryCount}/{maxRetries} in {delayMs / 1000}s");
+                Debug.Log($"Network error. Retry {retryCount}/{maxRetries} in {delayMs / 1000}s");
 
                 // Make sure we're not busy for the next attempt
                 SetBusy(false);

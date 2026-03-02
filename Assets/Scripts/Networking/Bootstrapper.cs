@@ -9,23 +9,42 @@ public class Bootstrapper : MonoBehaviour
     public static event System.Action OnServicesInitialized;
     public static bool ServicesInitialized { get; private set; }
 
+    [Header("Player Names")]
+    [SerializeField]
+    private string[] randomNames = new string[]
+    {
+        "GhostHunter",
+        "SpookyPlayer",
+        "PhasmFears",
+        "Ectoplasm",
+        "Paranormal",
+        "SpecterSeeker",
+        "Sokka",
+        "Aang",
+        "Toph",
+        "Katara",
+        "Zuko"
+
+    };
+
     private async void Awake()
     {
         DontDestroyOnLoad(gameObject);
         await InitializeServices();
 
-        // Set local player name BEFORE loading scene
-        if (AuthenticationService.Instance.IsSignedIn)
+        // Generate random name if none exists
+        if (!PlayerPrefs.HasKey("PlayerName") && randomNames.Length > 0)
         {
-            string playerName = $"Player{AuthenticationService.Instance.PlayerId}";
-            PlayerPrefs.SetString("PlayerName", playerName);
+            string randomName = randomNames[UnityEngine.Random.Range(0, randomNames.Length)] + " " + randomNames[UnityEngine.Random.Range(0, randomNames.Length)];
+            PlayerPrefs.SetString("PlayerName", randomName);
             PlayerPrefs.Save();
-            Debug.Log($"Bootstrapper: Saved player name {playerName}");
+            Debug.Log($"Generated random name: {randomName}");
         }
 
         Debug.Log("Services ready, loading LobbyScene...");
         SceneManager.LoadScene("LobbyScene");
     }
+
 
     private async Task InitializeServices()
     {

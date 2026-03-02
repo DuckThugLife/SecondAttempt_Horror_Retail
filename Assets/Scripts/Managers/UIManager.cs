@@ -19,4 +19,20 @@ public class UIManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject); 
     }
+
+    public void SetUIEnabled(bool enabled)
+    {
+        if (enabled)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            PlayerStateMachine.LocalInstance?.SetPlayerEnabled(false);
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            PlayerStateMachine.LocalInstance?.SetPlayerEnabled(true);
+        }
+    }
 }

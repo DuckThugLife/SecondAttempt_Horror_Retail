@@ -7,6 +7,7 @@ using Unity.Services.Authentication;
 using Unity.Services.Multiplayer;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Unity.Services.Vivox;
 
 public class SessionManager : MonoBehaviour
 {
@@ -20,6 +21,7 @@ public class SessionManager : MonoBehaviour
 
     private ISession _currentSession;
     private bool _isBusy;
+    private bool _vivoxInitialized = false;
 
     // Message name constant
     private const string HostLeavingMessageName = "HostLeaving";
@@ -139,6 +141,8 @@ public class SessionManager : MonoBehaviour
 
         Debug.Log("HostSessionAsync - Creating new session...");
         _currentSession = await CreateNewSessionAsync(maxPlayers); // This will throw on rate limit
+        await SetupVoiceChat(_currentSession); // SETUP voice chat
+
         Debug.Log($"HostSessionAsync - Session created with code: {_currentSession?.Code}");
 
         Debug.Log("HostSessionAsync - Starting host...");
@@ -327,6 +331,7 @@ public class SessionManager : MonoBehaviour
 
         Debug.Log($"Attempting to join session: {newCode}");
         _currentSession = await MultiplayerService.Instance.JoinSessionByCodeAsync(newCode);
+        await SetupVoiceChat(_currentSession);
 
         if (NetworkManager.Singleton != null && !NetworkManager.Singleton.IsListening)
             NetworkManager.Singleton.StartClient();
@@ -350,6 +355,28 @@ public class SessionManager : MonoBehaviour
         await TryHostWithRetryAsync(); // Use retry logic here too
     }
 
+    private async Task SetupVoiceChat(ISession session)
+    {
+        try
+        {
+            // Initialize Vivox only when we actually need it (after session created)
+            if (!_vivoxInitialized)
+            {
+                await VivoxService.Instance.InitializeAsync();
+                _vivoxInitialized = true;
+                Debug.Log("Vivox initialized successfully");
+            }
+
+            var channelName = session.Code;
+            await VivoxService.Instance.JoinGroupChannelAsync(channelName, ChatCapability.AudioOnly);
+            Debug.Log($"Joined voice channel: {channelName}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"Voice chat failed: {e.Message}");
+        }
+    }
+
     #endregion
 
     #region Leave Methods
@@ -357,6 +384,8 @@ public class SessionManager : MonoBehaviour
     public async Task LeaveSessionAsync()
     {
         SetBusy(true);
+
+        await VivoxService.Instance.LeaveAllChannelsAsync();
 
         // Force exit UI state before leaving
         if (PlayerStateMachine.LocalInstance != null &&

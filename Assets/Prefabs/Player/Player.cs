@@ -8,22 +8,27 @@ using UnityEngine;
 public class Player : NetworkBehaviour
 {
     public static Player Local;
+    public event Action<string> OnUsernameChanged;
 
     private NetworkVariable<FixedString64Bytes> usernameNetworkVar
         = new NetworkVariable<FixedString64Bytes>(writePerm: NetworkVariableWritePermission.Server);
+
+    private void Awake()
+    {
+        usernameNetworkVar.OnValueChanged += (oldValue, newValue) =>
+        {
+            OnUsernameChanged?.Invoke(newValue.ToString());
+            Debug.Log($"Username changed from {oldValue} to {newValue}");
+        };
+    }
 
     public override void OnNetworkSpawn()
     {
         Debug.Log($"[Player {OwnerClientId}] OnNetworkSpawn - IsServer: {IsServer}, IsOwner: {IsOwner}");
 
-        // Register with NetworkObjectManager
         if (NetworkObjectManager.Instance != null)
-        {
             NetworkObjectManager.Instance.RegisterPlayer(OwnerClientId, this);
-            Debug.Log($"[Player {OwnerClientId}] Registered with NetworkObjectManager");
-        }
 
-        // Server sends join message when ready
         if (IsServer)
         {
             StartCoroutine(SendJoinMessageWhenReady());
@@ -32,8 +37,6 @@ public class Player : NetworkBehaviour
         if (IsOwner)
         {
             Local = this;
-
-            // Always use current PlayerPrefs name (could have been changed)
             string savedName = PlayerPrefs.GetString("PlayerName", $"Player{OwnerClientId}");
             Debug.Log($"[Player {OwnerClientId}] Requesting username: {savedName}");
             RequestUsernameChangeServerRPC(savedName);
@@ -109,6 +112,7 @@ public class Player : NetworkBehaviour
         Debug.Log($"[Server] Set username for {OwnerClientId} to {username}");
     }
 
+    // Simplified - just for owners to request changes
     public void RequestUsernameChange(string newUsername)
     {
         if (IsOwner)
@@ -116,6 +120,4 @@ public class Player : NetworkBehaviour
             RequestUsernameChangeServerRPC(newUsername);
         }
     }
-
-
 }

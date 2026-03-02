@@ -67,43 +67,6 @@ public class MessageManager : NetworkBehaviour
 
         switch (command)
         {
-            case "/name":
-                if (parts.Length > 1)
-                {
-                    // Check cooldown
-                    if (Time.time - lastNameChangeTime < NameChangeCooldown)
-                    {
-                        float remaining = NameChangeCooldown - (Time.time - lastNameChangeTime);
-                        ReplicateMessageClientRPC($"Please wait {remaining:F1}s before changing name again");
-                        return true;
-                    }
-
-                    string newName = string.Join(" ", parts, 1, parts.Length - 1);
-                    if (newName.Length > 20) newName = newName.Substring(0, 20);
-
-                    Player player = NetworkObjectManager.Instance?.GetPlayer(clientId);
-                    if (player != null)
-                    {
-                        lastNameChangeTime = Time.time;
-                        string oldName = player.GetUsernameNetworkVar().Value.ToString();
-
-                        player.RequestUsernameChange(newName);
-
-                        if (player.IsOwner)
-                        {
-                            PlayerPrefs.SetString("PlayerName", newName);
-                            PlayerPrefs.Save();
-                        }
-
-                        ReplicateMessageClientRPC($"<color=yellow>{oldName} changed name to {newName}</color>");
-                    }
-                }
-                else
-                {
-                    ReplicateMessageClientRPC("Usage: /name <newname>");
-                }
-                return true;
-
             case "/help":
                 ReplicateMessageClientRPC("Available commands: /name, /help");
                 return true;

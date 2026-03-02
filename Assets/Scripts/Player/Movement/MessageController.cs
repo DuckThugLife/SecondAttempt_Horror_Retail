@@ -82,8 +82,11 @@ public class MessageController : MonoBehaviour
 
     private void OpenChatInput()
     {
-        // Don't open chat if any UI menu is open
+        // Don't open chat if any UI menu is open OR settings is open
         if (PlayerStateMachine.LocalInstance?.CurrentState is BaseUIState)
+            return;
+
+        if (UIManager.Instance.SessionUIManager.IsSettingsOpen())
             return;
 
         _isInputOpen = true;
@@ -91,10 +94,8 @@ public class MessageController : MonoBehaviour
         chatInput.interactable = true;
         chatInput.ActivateInputField();
 
-        // Disable player movement while typing
         localPlayer?.SetPlayerEnabled(false);
 
-        // Make chat log fully visible when typing
         if (chatLogCanvasGroup != null)
         {
             if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);

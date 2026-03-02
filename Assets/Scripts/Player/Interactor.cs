@@ -24,6 +24,10 @@ public class Interactor : MonoBehaviour
 
     private void Update()
     {
+        // Don't interact if settings is open
+        if (UIManager.Instance.SessionUIManager.IsSettingsOpen())
+            return;
+
         HandleHover();
 
         if (Input.GetKeyDown(KeyCode.E))

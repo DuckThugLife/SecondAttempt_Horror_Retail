@@ -47,6 +47,28 @@ public class SessionUIManager : MonoBehaviour
             settingsPanel.SetActive(false);
     }
 
+    private async void OnEnable()
+    {
+        Debug.Log($"SessionUIManager OnEnable - SessionManager.Instance exists: {SessionManager.Instance != null}");
+
+        if (SessionManager.Instance != null)
+        {
+            SubscribeToEvents();
+
+            if (NetworkManager.Singleton != null)
+            {
+                NetworkManager.Singleton.OnClientConnectedCallback += OnClientCountChanged;
+                NetworkManager.Singleton.OnClientDisconnectCallback += OnClientCountChanged;
+            }
+        }
+        else
+        {
+            Debug.Log("SessionManager not ready yet - waiting...");
+            await WaitForSessionManager();
+        }
+    }
+
+
     public void OpenSettings()
     {
         settingsPanel.SetActive(true);
@@ -67,25 +89,9 @@ public class SessionUIManager : MonoBehaviour
             OpenSettings();
     }
 
-    private async void OnEnable()
+    public bool IsSettingsOpen()
     {
-        Debug.Log($"SessionUIManager OnEnable - SessionManager.Instance exists: {SessionManager.Instance != null}");
-
-        if (SessionManager.Instance != null)
-        {
-            SubscribeToEvents();
-
-            if (NetworkManager.Singleton != null)
-            {
-                NetworkManager.Singleton.OnClientConnectedCallback += OnClientCountChanged;
-                NetworkManager.Singleton.OnClientDisconnectCallback += OnClientCountChanged;
-            }
-        }
-        else
-        {
-            Debug.Log("SessionManager not ready yet - waiting...");
-            await WaitForSessionManager();
-        }
+        return settingsPanel != null && settingsPanel.activeSelf;
     }
 
     private async Task WaitForSessionManager()

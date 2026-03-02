@@ -50,18 +50,15 @@ public class PlayerStateMachine : NetworkBehaviour
     {
         if (!IsOwner) return;
 
-        // Global ESC to toggle settings (if not in another UI)
-        if (PlayerInputHandler.LastKeyPressed == Key.Escape)
+        // Let current state handle its own input
+        CurrentState?.Tick();
+
+        // Global ESC only if not in any UI state
+        if (PlayerInputHandler.LastKeyPressed == Key.Escape && !(CurrentState is BaseUIState))
         {
-            // Don't toggle if in lobby menu or loading
-            if (!(CurrentState is LobbyMenuState) && !(CurrentState is PlayerLoadingState))
-            {
-                UIManager.Instance.SessionUIManager.ToggleSettings();
-            }
+            UIManager.Instance.SessionUIManager.ToggleSettings();
             PlayerInputHandler.ResetLastKey();
         }
-
-        CurrentState?.Tick();
     }
 
     public void PushState(PlayerState newState)

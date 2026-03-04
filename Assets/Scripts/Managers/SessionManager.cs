@@ -12,7 +12,7 @@ using Unity.Services.Vivox;
 public class SessionManager : MonoBehaviour
 {
     public static SessionManager Instance { get; private set; }
-    public bool IsHost => NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
+    public bool IsHost => _currentSession?.Host == AuthenticationService.Instance.PlayerId;
 
     public event Action<ISession> OnSessionCreated;
     public event Action<ISession> OnSessionJoined;
@@ -46,24 +46,22 @@ public class SessionManager : MonoBehaviour
         if (Bootstrapper.ServicesInitialized)
             HandleServicesReady();
 
-        // Subscribe to network disconnect events
-        if (NetworkManager.Singleton != null)
+        // NetworkManager should exist now - if not, log error and exit
+        if (NetworkManager.Singleton == null)
         {
-            Debug.Log("Subscribing to disconnect events");
-            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
-
-            if (NetworkManager.Singleton.CustomMessagingManager != null)
-            {
-                NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(
-                    HostLeavingMessageName,
-                    OnHostLeavingMessage
-                );
-            }
+            Debug.LogError("NetworkManager.Singleton is null in OnEnable - check boot order");
+            return;
         }
-        else
+
+        Debug.Log("Subscribing to disconnect events");
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+
+        if (NetworkManager.Singleton.CustomMessagingManager != null)
         {
-            Debug.LogWarning("NetworkManager.Singleton is null in OnEnable - will try again later");
-            Invoke(nameof(TrySubscribeToDisconnect), 0.5f);
+            NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(
+                HostLeavingMessageName,
+                OnHostLeavingMessage
+            );
         }
     }
 
@@ -267,17 +265,27 @@ public class SessionManager : MonoBehaviour
 
         await LeaveCurrentSessionIfAny();
 
-        // Workaround: Force re-authentication to clear Unity lobby service cached state
-        Debug.Log("Workaround: Signing out and back in to clear lobby state");
-        try
+        // Try to reconnect to previous session if it was just a disconnect
+        if (hadPreviousSession && !string.IsNullOrEmpty(oldCode))
         {
-            AuthenticationService.Instance.SignOut();
-            await AuthenticationService.Instance.SignInAnonymouslyAsync();
-            Debug.Log("Re-authentication complete");
-        }
-        catch (Exception authEx)
-        {
-            Debug.LogError($"Re-authentication failed: {authEx.Message}");
+            try
+            {
+                Debug.Log($"Attempting to reconnect to previous session: {oldCode}");
+                _currentSession = await MultiplayerService.Instance.JoinSessionByCodeAsync(oldCode);
+                await SetupVoiceChat(_currentSession);
+                if (NetworkManager.Singleton != null && !NetworkManager.Singleton.IsListening)
+                    NetworkManager.Singleton.StartClient();
+                OnSessionJoined?.Invoke(_currentSession);
+
+                // Skip the rest of join flow since we reconnected
+                SetBusy(false);
+                return;
+            }
+            catch (Exception reconnectEx)
+            {
+                Debug.Log($"Reconnect failed, proceeding with normal join: {reconnectEx.Message}");
+                // Fall through to normal join
+            }
         }
 
         // Small delay to ensure cleanup

@@ -12,15 +12,13 @@ public class Interactor : MonoBehaviour
 
     private IInteractable _currentInteractable;
     private IHoverable _currentHoverable;
-
-
+    private bool _isLeaving = false; // bool to fix the hovering bug on leaving
 
     private void Awake()
     {
         if (StateMachine == null)
             StateMachine = GetComponent<PlayerStateMachine>();
     }
-
 
     private void Update()
     {
@@ -30,7 +28,7 @@ public class Interactor : MonoBehaviour
 
         HandleHover();
 
-        if (Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.E) && !_isLeaving) // Don't interact while leaving
         {
             _currentInteractable?.Interact(this);
         }
@@ -38,6 +36,9 @@ public class Interactor : MonoBehaviour
 
     private void HandleHover()
     {
+        // Skip hover processing if we're leaving
+        if (_isLeaving) return;
+
         if (!Physics.Raycast(
                 playerCamera.transform.position,
                 playerCamera.transform.forward,
@@ -72,5 +73,12 @@ public class Interactor : MonoBehaviour
         }
 
         _currentInteractable = null;
+    }
+
+    // Call this before leaving to prevent re-hover
+    public void SetLeaving()
+    {
+        _isLeaving = true;
+        ClearHover();
     }
 }

@@ -43,7 +43,14 @@ public class PlayerStateMachine : NetworkBehaviour
     public override void OnDestroy()
     {
         if (IsOwner && LocalInstance == this)
+        {
+            // Force hover cleanup when player is destroyed, this is a good saftey net.
+            if (UIManager.Instance != null && UIManager.Instance.GameUIManager != null)
+            {
+                UIManager.Instance.GameUIManager.UnHoverUI();
+            }
             LocalInstance = null;
+        }
     }
 
     private void Update()

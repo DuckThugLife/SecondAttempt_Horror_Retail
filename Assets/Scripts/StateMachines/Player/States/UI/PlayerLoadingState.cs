@@ -40,7 +40,7 @@ public class PlayerLoadingState : PlayerState
         if (stateMachine.GetCurrentState() == this)
         {
             if (SceneManager.GetActiveScene().name == "GameScene")
-                stateMachine.ChangeState(stateMachine.AliveState);
+                stateMachine.ChangeState(stateMachine.GameState);
             else
                 stateMachine.ChangeState(stateMachine.LobbyState);
         }

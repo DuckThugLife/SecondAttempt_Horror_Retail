@@ -9,7 +9,6 @@ public class Bootstrapper : MonoBehaviour
 {
     public static event System.Action OnServicesInitialized;
     public static bool ServicesInitialized { get; private set; }
-    private static bool _vivoxInitialized = false;
 
     [Header("Player Names")]
     [SerializeField]

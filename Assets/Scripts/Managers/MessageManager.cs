@@ -24,16 +24,15 @@ public class MessageManager : NetworkBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-
-    [ClientRpc]
+    [Rpc(SendTo.ClientsAndHost)]
     public void ReplicateMessageClientRPC(string message)
     {
         if (MessageController.Instance != null)
             MessageController.Instance.AddNewMessage(message);
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void SendMessageServerRPC(string message, ServerRpcParams serverRpcParams = default)
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void SendMessageServerRPC(string message, RpcParams rpcParams = default)
     {
         if (string.IsNullOrEmpty(message)) return;
 
@@ -41,7 +40,7 @@ public class MessageManager : NetworkBehaviour
         if (message.Length > maxMessageLength)
             message = message.Substring(0, maxMessageLength);
 
-        ulong clientId = serverRpcParams.Receive.SenderClientId;
+        ulong clientId = rpcParams.Receive.SenderClientId;
         Player player = NetworkObjectManager.Instance.GetPlayer(clientId);
         if (player == null) return;
 
@@ -51,7 +50,7 @@ public class MessageManager : NetworkBehaviour
         ReplicateMessageClientRPC($"{player.GetUsernameNetworkVar().Value}: {message}");
     }
 
-    [ServerRpc(RequireOwnership = false)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void SendSystemMessageServerRPC(string message)
     {
         ReplicateMessageClientRPC(message);
@@ -76,5 +75,4 @@ public class MessageManager : NetworkBehaviour
                 return true;
         }
     }
-
 }

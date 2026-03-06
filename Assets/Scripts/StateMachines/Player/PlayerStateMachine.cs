@@ -15,7 +15,7 @@ public class PlayerStateMachine : NetworkBehaviour
 
     // Cached states (no allocations during gameplay)
     public PlayerLobbyState LobbyState { get; private set; }
-    public PlayerAliveState AliveState { get; private set; }
+    public PlayerGameState GameState { get; private set; }
     public PlayerDeadState DeadState { get; private set; }
     public LobbyMenuState LobbyMenuState { get; private set; }
     public PlayerLoadingState LoadingState { get; private set; }
@@ -25,7 +25,7 @@ public class PlayerStateMachine : NetworkBehaviour
     private void Awake()
     {
         LobbyState = new PlayerLobbyState(this);
-        AliveState = new PlayerAliveState(this);
+        GameState = new PlayerGameState(this);
         DeadState = new PlayerDeadState(this);
         LobbyMenuState = new LobbyMenuState(this);
         LoadingState = new PlayerLoadingState(this);

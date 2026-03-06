@@ -97,7 +97,7 @@ public class Player : NetworkBehaviour
         return usernameNetworkVar;
     }
 
-    [ServerRpc(RequireOwnership = true)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
     private void RequestUsernameChangeServerRPC(FixedString64Bytes requestedUsername)
     {
         string username = requestedUsername.ToString();
@@ -112,7 +112,7 @@ public class Player : NetworkBehaviour
         Debug.Log($"[Server] Set username for {OwnerClientId} to {username}");
     }
 
-    // Simplified - just for owners to request changes
+    // Public method for owners to request changes
     public void RequestUsernameChange(string newUsername)
     {
         if (IsOwner)

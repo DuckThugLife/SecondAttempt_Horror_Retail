@@ -1,6 +1,6 @@
-public class PlayerAliveState : PlayerState
+public class PlayerGameState : PlayerState
 {
-    public PlayerAliveState(PlayerStateMachine machine) : base(machine) { }
+    public PlayerGameState(PlayerStateMachine machine) : base(machine) { }
 
     public override void Enter()
     {

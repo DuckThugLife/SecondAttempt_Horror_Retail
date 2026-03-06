@@ -16,7 +16,7 @@ public class SessionManager : MonoBehaviour
 
     public event Action<ISession> OnSessionCreated;
     public event Action<ISession> OnSessionJoined;
-    public event Action<ISession> OnSessionChanged;  // Added this back
+    public event Action<ISession> OnSessionChanged;
     public event Action<bool> OnBusyChanged;
     public event Action OnHostDisconnected;
 
@@ -75,7 +75,7 @@ public class SessionManager : MonoBehaviour
     private async void HandleServicesReady()
     {
         Debug.Log("Services ready, hosting session...");
-        await HostSessionAsync();
+        await CreateAndHostSessionAsync();
     }
 
     #endregion
@@ -94,13 +94,18 @@ public class SessionManager : MonoBehaviour
 
         if (!IsHost)
         {
-            if (PlayerStateMachine.LocalInstance != null &&
-                PlayerStateMachine.LocalInstance.GetCurrentState() is BaseUIState)
+            // Force UI cleanup on disconnect
+            if (PlayerStateMachine.LocalInstance != null)
             {
-                PlayerStateMachine.LocalInstance.ChangeState(PlayerStateMachine.LocalInstance.LobbyState);
+                var currentState = PlayerStateMachine.LocalInstance.GetCurrentState();
+                if (currentState is BaseUIState)
+                {
+                    Debug.Log("Disconnected - forcing exit from UI state");
+                    PlayerStateMachine.LocalInstance.ChangeState(PlayerStateMachine.LocalInstance.LobbyState);
+                }
             }
 
-            Debug.Log("Disconnected from host - falling back to new host session");
+            Debug.Log("Disconnected from host - creating new session");
             OnHostDisconnected?.Invoke();
             _ = HandleHostDisconnectAsync();
         }
@@ -152,9 +157,18 @@ public class SessionManager : MonoBehaviour
                 await VivoxService.Instance.InitializeAsync();
                 _vivoxInitialized = true;
                 Debug.Log("Vivox initialized successfully");
+                await Task.Delay(500);
+            }
+
+            if (!VivoxService.Instance.IsLoggedIn)
+            {
+                Debug.Log("Logging in to Vivox...");
+                await VivoxService.Instance.LoginAsync();
+                await Task.Delay(500);
             }
 
             var channelName = session.Code;
+            Debug.Log($"Joining Vivox channel: {channelName}");
 
             await VivoxService.Instance.JoinGroupChannelAsync(
                 channelName,
@@ -162,11 +176,31 @@ public class SessionManager : MonoBehaviour
             );
 
             _voiceActive = true;
-            Debug.Log($"Joined voice channel: {channelName}");
+            Debug.Log($"Successfully joined voice channel: {channelName}");
         }
         catch (Exception e)
         {
             Debug.LogWarning($"Voice chat failed: {e.Message}");
+            _voiceActive = false;
+            await ResetVivoxAsync();
+        }
+    }
+
+    private async Task ResetVivoxAsync()
+    {
+        try
+        {
+            if (VivoxService.Instance != null)
+            {
+                try { await VivoxService.Instance.LeaveAllChannelsAsync(); } catch { }
+                if (VivoxService.Instance.IsLoggedIn)
+                    try { await VivoxService.Instance.LogoutAsync(); } catch { }
+            }
+        }
+        finally
+        {
+            _vivoxInitialized = false;
+            _voiceActive = false;
         }
     }
 
@@ -184,7 +218,6 @@ public class SessionManager : MonoBehaviour
         if (_currentSession != null)
             _currentSession.SessionHostChanged += HandleSessionHostChanged;
 
-        // Fire the general session changed event whenever the session changes
         OnSessionChanged?.Invoke(_currentSession);
     }
 
@@ -197,14 +230,129 @@ public class SessionManager : MonoBehaviour
         if (networkManager.IsListening)
             networkManager.Shutdown();
 
-        float timeout = 5f;
-        float timer = 0f;
-
-        while (networkManager != null && networkManager.IsListening && timer < timeout)
+        var shutdownTask = Task.Run(async () =>
         {
-            await Task.Delay(100);
-            timer += 0.1f;
+            while (networkManager != null && networkManager.IsListening)
+                await Task.Delay(50);
+        });
+
+        await Task.WhenAny(shutdownTask, Task.Delay(3000));
+    }
+
+    #endregion
+
+    #region Session Management
+
+    private async Task<ISession> CreateAndHostSessionAsync()
+    {
+        await WaitForNetworkShutdownAsync();
+        await ResetVivoxAsync();
+
+        var options = new SessionOptions { MaxPlayers = 4 }.WithRelayNetwork();
+        var session = await MultiplayerService.Instance.CreateSessionAsync(options);
+
+        SetCurrentSession(session);
+        OnSessionCreated?.Invoke(session);
+        return session;
+    }
+
+    public async Task JoinSessionAsync(string code)
+    {
+        if (_isBusy || string.IsNullOrWhiteSpace(code))
+            return;
+
+        SetBusy(true);
+
+        try
+        {
+            await WaitForNetworkShutdownAsync();
+            await ResetVivoxAsync();
+
+            // attempt the join - it will throw if invalid
+            var session = await MultiplayerService.Instance.JoinSessionByCodeAsync(code);
+
+            SetCurrentSession(session);
+            OnSessionJoined?.Invoke(session);
         }
+        catch (SessionException ex) when (ex.Message.Contains("not found") || ex.Message.Contains("invalid"))
+        {
+            Debug.Log($"Session with code {code} doesn't exist");
+
+            // Immediately fall back to lobby and host
+            SceneManager.LoadScene("LobbyScene");
+            await CreateAndHostSessionAsync();
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"Failed to join session: {e.Message}");
+            SceneManager.LoadScene("LobbyScene");
+            await CreateAndHostSessionAsync();
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
+    public async Task LeaveSessionAsync()
+    {
+        if (_currentSession == null)
+            return;
+
+        SetBusy(true);
+
+        try
+        {
+            await ResetVivoxAsync();
+            await _currentSession.LeaveAsync();
+
+            SetCurrentSession(null);
+            NetworkManager.Singleton?.Shutdown();
+
+            SceneManager.LoadScene("LobbyScene");
+            await CreateAndHostSessionAsync();
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
+    private async Task HandleHostDisconnectAsync()
+    {
+        SetBusy(true);
+
+        // Force state cleanup on host disconnect
+        if (PlayerStateMachine.LocalInstance != null)
+        {
+            var currentState = PlayerStateMachine.LocalInstance.GetCurrentState();
+
+            // If we're in any UI state (LobbyMenuState is a BaseUIState), force back to clean LobbyState
+            if (currentState is BaseUIState)
+            {
+                Debug.Log("Host disconnected - forcing exit from UI state");
+                PlayerStateMachine.LocalInstance.ChangeState(PlayerStateMachine.LocalInstance.LobbyState);
+            }
+        }
+
+        await ResetVivoxAsync();
+        SetCurrentSession(null);
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        {
+            NetworkManager.Singleton.Shutdown();
+            await WaitForNetworkShutdownAsync();
+        }
+
+        // Make sure we're in the lobby scene
+        if (SceneManager.GetActiveScene().name != "LobbyScene")
+        {
+            SceneManager.LoadScene("LobbyScene");
+            await WaitForSceneLoadAsync("LobbyScene");
+        }
+
+        SetBusy(false);
+        await CreateAndHostSessionAsync();
     }
 
     private async Task WaitForSceneLoadAsync(string sceneName, float timeoutSeconds = 5f)
@@ -223,177 +371,6 @@ public class SessionManager : MonoBehaviour
         Debug.LogWarning($"Scene load timeout after {timeoutSeconds}s");
     }
 
-    #endregion
-
-    #region Hosting
-
-    private async Task<ISession> HostSessionAsync()
-    {
-        await WaitForNetworkShutdownAsync();
-
-        var session = await CreateNewSessionAsync();
-
-        if (session == null)
-            throw new Exception("Session creation failed");
-
-        SetCurrentSession(session);
-        OnSessionCreated?.Invoke(session);
-
-        return session;
-    }
-
-    private async Task TryHostWithRetryAsync()
-    {
-        const int maxRetries = 3;
-        int attempt = 0;
-
-        while (attempt < maxRetries)
-        {
-            try
-            {
-                await WaitForNetworkShutdownAsync();
-
-                Debug.Log($"Host attempt {attempt + 1}");
-
-                var session = await HostSessionAsync();
-
-                if (session != null)
-                {
-                    Debug.Log("Host migration successful");
-                    return;
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"Host attempt failed: {e.Message}");
-            }
-
-            attempt++;
-
-            await Task.Delay(1500);
-        }
-
-        Debug.LogError("All host retry attempts failed.");
-    }
-
-    private async Task CleanupNetworkSessionAsync()
-    {
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
-        {
-            NetworkManager.Singleton.Shutdown();
-            await WaitForNetworkShutdownAsync();
-        }
-    }
-
-    private async Task<ISession> CreateNewSessionAsync()
-    {
-        var options = new SessionOptions { MaxPlayers = 4 }
-            .WithRelayNetwork();
-
-        return await MultiplayerService.Instance.CreateSessionAsync(options);
-    }
-
-    #endregion
-
-    #region Joining
-
-    public async Task JoinSessionAsync(string code)
-    {
-        if (_isBusy || string.IsNullOrWhiteSpace(code))
-            return;
-
-        SetBusy(true);
-
-        try
-        {
-            await WaitForNetworkShutdownAsync();
-
-            var session = await MultiplayerService.Instance.JoinSessionByCodeAsync(code);
-
-            SetCurrentSession(session);
-            OnSessionJoined?.Invoke(session);
-        }
-        finally
-        {
-            SetBusy(false);
-        }
-    }
-
-    private async Task LeaveCurrentSessionIfAny()
-    {
-        if (_currentSession == null)
-            return;
-
-        try
-        {
-            await _currentSession.LeaveAsync();
-        }
-        catch (Exception e)
-        {
-            Debug.LogWarning($"Failed leaving session: {e.Message}");
-        }
-
-        SetCurrentSession(null);
-
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
-        {
-            NetworkManager.Singleton.Shutdown();
-            await WaitForNetworkShutdownAsync();
-        }
-    }
-
-    #endregion
-
-    #region Leaving
-
-    public async Task LeaveSessionAsync()
-    {
-        SetBusy(true);
-
-        await VivoxService.Instance.LeaveAllChannelsAsync();
-        _voiceActive = false;
-
-        try
-        {
-            if (IsHost)
-                await EndSessionForAllAsync();
-            else
-                await LeaveCurrentSessionIfAny();
-        }
-        finally
-        {
-            SetCurrentSession(null);
-
-            SceneManager.LoadScene("LobbyScene");
-            await WaitForSceneLoadAsync("LobbyScene");
-
-            await TryHostWithRetryAsync();
-            SetBusy(false);
-        }
-    }
-
-    private async Task EndSessionForAllAsync()
-    {
-        if (_currentSession != null)
-        {
-            try
-            {
-                await _currentSession.LeaveAsync();
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"Error ending session: {e.Message}");
-            }
-        }
-
-        if (NetworkManager.Singleton != null)
-            NetworkManager.Singleton.Shutdown();
-    }
-
-    #endregion
-
-    #region Host Disconnect
-
     private void HandleSessionHostChanged(string newHostId)
     {
         if (newHostId != AuthenticationService.Instance.PlayerId)
@@ -401,28 +378,6 @@ public class SessionManager : MonoBehaviour
             OnHostDisconnected?.Invoke();
             _ = HandleHostDisconnectAsync();
         }
-    }
-
-    private async Task HandleHostDisconnectAsync()
-    {
-        SetBusy(true);
-
-        SetCurrentSession(null);
-
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
-        {
-            NetworkManager.Singleton.Shutdown();
-            await WaitForNetworkShutdownAsync();
-        }
-
-        if (SceneManager.GetActiveScene().name != "LobbyScene")
-        {
-            SceneManager.LoadScene("LobbyScene");
-            await WaitForSceneLoadAsync("LobbyScene");
-        }
-
-        SetBusy(false);
-        await TryHostWithRetryAsync();
     }
 
     #endregion
@@ -439,7 +394,7 @@ public class SessionManager : MonoBehaviour
 
     public void StartSoloGame()
     {
-        if (_isBusy || (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening))
+        if (_isBusy || NetworkManager.Singleton?.IsListening == true)
             return;
 
         NetworkManager.Singleton.StartHost();

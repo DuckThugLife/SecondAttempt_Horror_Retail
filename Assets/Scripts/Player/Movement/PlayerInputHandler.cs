@@ -39,12 +39,6 @@ public class PlayerInputHandler : MonoBehaviour
         Look = context.ReadValue<Vector2>(); // always active for UI/cursor
     }
 
-    public void OnAnyKey(InputAction.CallbackContext context)
-    {
-        if (context.performed && context.control is KeyControl keyControl)
-            LastKeyPressed = keyControl.keyCode; // always active
-    }
-
     public void OnCancel(InputAction.CallbackContext context)
     {
         if (context.performed)
@@ -55,6 +49,12 @@ public class PlayerInputHandler : MonoBehaviour
     {
         if (context.performed)
             LastKeyPressed = Key.Enter;
+    }
+
+    public void OnInteract(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+            LastKeyPressed = Key.E;
     }
 
     public void ResetLastKey() => LastKeyPressed = Key.None;

@@ -1,9 +1,11 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class Interactor : MonoBehaviour
 {
     [Header("Classes")]
-    [HideInInspector] public PlayerStateMachine StateMachine;
+    [SerializeField] public PlayerStateMachine playerStateMachine;
+    [SerializeField] public PlayerInputHandler playerInputHandler;
     [SerializeField] private Camera playerCamera;
 
     [Header("Settings")]
@@ -16,8 +18,7 @@ public class Interactor : MonoBehaviour
 
     private void Awake()
     {
-        if (StateMachine == null)
-            StateMachine = GetComponent<PlayerStateMachine>();
+
     }
 
     private void Update()
@@ -27,10 +28,12 @@ public class Interactor : MonoBehaviour
             return;
 
         HandleHover();
+        Debug.Log(playerInputHandler.LastKeyPressed);
 
-        if (Input.GetKeyDown(KeyCode.E) && !_isLeaving) // Don't interact while leaving
+        if (playerInputHandler.LastKeyPressed == Key.E && !_isLeaving) // Don't interact while leaving
         {
             _currentInteractable?.Interact(this);
+            playerInputHandler.ResetLastKey();
         }
     }
 

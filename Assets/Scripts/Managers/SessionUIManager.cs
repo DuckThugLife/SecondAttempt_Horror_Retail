@@ -123,8 +123,7 @@ public class SessionUIManager : MonoBehaviour
 
     private void SubscribeToEvents()
     {
-        SessionManager.Instance.OnSessionCreated += HandleSessionChanged;
-        SessionManager.Instance.OnSessionJoined += HandleSessionChanged;
+        SessionManager.Instance.OnSessionChanged += HandleSessionChanged;
         SessionManager.Instance.OnBusyChanged += HandleBusyChanged;
     }
 
@@ -132,8 +131,7 @@ public class SessionUIManager : MonoBehaviour
     {
         if (SessionManager.Instance != null)
         {
-            SessionManager.Instance.OnSessionCreated -= HandleSessionChanged;
-            SessionManager.Instance.OnSessionJoined -= HandleSessionChanged;
+            SessionManager.Instance.OnSessionChanged -= HandleSessionChanged;
             SessionManager.Instance.OnBusyChanged -= HandleBusyChanged;
         }
 
@@ -168,14 +166,25 @@ public class SessionUIManager : MonoBehaviour
 
     private void HandleSessionChanged(ISession session)
     {
-        Debug.Log($"HandleSessionChanged called with code: {session?.Code}");
+        if (session == null)
+        {
+            ClearSessionCode();
+            ShowLoading(false);
+            UpdateLeaveButtonVisibility();
+            return;
+        }
+
+        Debug.Log($"HandleSessionChanged: {session.Code}");
+
         UpdateSessionCode(session);
         ShowLoading(false);
         UpdateLeaveButtonVisibility();
 
         bool isHost = SessionManager.Instance != null && SessionManager.Instance.IsHost;
+
         if (joinInputField != null)
             joinInputField.gameObject.SetActive(isHost);
+
         if (joinButton != null)
             joinButton.gameObject.SetActive(isHost);
     }

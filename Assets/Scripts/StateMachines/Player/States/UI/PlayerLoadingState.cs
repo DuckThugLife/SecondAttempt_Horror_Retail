@@ -11,9 +11,10 @@ public class PlayerLoadingState : PlayerState
     {
         if (SessionManager.Instance != null)
         {
-            SessionManager.Instance.OnSessionJoined += OnSessionJoined;
-            SessionManager.Instance.OnSessionCreated += OnSessionJoined;
-            SessionManager.Instance.OnHostDisconnected += OnHostDisconnected; // Add this event
+            // Subscribe to session changes
+            SessionManager.Instance.OnSessionChanged += OnSessionChanged;
+            // Still keep host disconnect if you need it
+            SessionManager.Instance.OnHostDisconnected += OnHostDisconnected;
         }
     }
 
@@ -35,15 +36,19 @@ public class PlayerLoadingState : PlayerState
         }
     }
 
-    private void OnSessionJoined(ISession session)
+    private void OnSessionChanged(ISession session)
     {
-        if (stateMachine.GetCurrentState() == this)
-        {
-            if (SceneManager.GetActiveScene().name == "GameScene")
-                stateMachine.ChangeState(stateMachine.GameState);
-            else
-                stateMachine.ChangeState(stateMachine.LobbyState);
-        }
+        if (stateMachine.GetCurrentState() != this)
+            return;
+
+        // If session is null, ignore (we're leaving, not joining)
+        if (session == null)
+            return;
+
+        if (SceneManager.GetActiveScene().name == "GameScene")
+            stateMachine.ChangeState(stateMachine.GameState);
+        else
+            stateMachine.ChangeState(stateMachine.LobbyState);
     }
 
     public override void Tick()

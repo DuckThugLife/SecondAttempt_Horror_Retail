@@ -37,6 +37,28 @@ public class PlayerStateMachine : NetworkBehaviour
         {
             LocalInstance = this;
             ChangeState(LobbyState);
+
+            Debug.Log($"PlayerStateMachine: Spawned - Host: {IsHost}, Owner: {IsOwner}");
+
+            // Tell VoiceManager we're ready
+            if (VoiceManager.Instance != null)
+            {
+                Debug.Log("PlayerStateMachine: Calling VoiceManager.OnLocalPlayerReady()");
+                VoiceManager.Instance.OnLocalPlayerReady();
+            }
+            else
+            {
+                Debug.LogError("PlayerStateMachine: VoiceManager.Instance is null!");
+            }
+        }
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        if (IsOwner)
+        {
+            // Clean up voice when player leaves
+            VoiceManager.Instance?.OnLocalPlayerLeft();
         }
     }
 
@@ -133,5 +155,4 @@ public class PlayerStateMachine : NetworkBehaviour
     {
         PushState(LobbyMenuState);
     }
-
 }

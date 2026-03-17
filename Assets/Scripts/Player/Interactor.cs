@@ -28,7 +28,6 @@ public class Interactor : MonoBehaviour
             return;
 
         HandleHover();
-        Debug.Log(playerInputHandler.LastKeyPressed);
 
         if (playerInputHandler.LastKeyPressed == Key.E && !_isLeaving) // Don't interact while leaving
         {

@@ -4,14 +4,16 @@ using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Services.Authentication;
 using Unity.Services.Multiplayer;
+using Unity.VisualScripting;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class SessionManager : MonoBehaviour
+public class SessionManager : NetworkBehaviour
 {
     public static SessionManager Instance { get; private set; }
-
     public bool IsHost => _currentSession?.Host == AuthenticationService.Instance.PlayerId;
+    
     public ISession CurrentSession => _currentSession;
 
     public event Action<ISession> OnSessionChanged;
@@ -20,6 +22,7 @@ public class SessionManager : MonoBehaviour
 
     private ISession _currentSession;
     private bool _isBusy;
+   
 
     #region Unity Lifecycle
 
@@ -34,6 +37,8 @@ public class SessionManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
+
+
 
     private void OnEnable()
     {
@@ -285,6 +290,10 @@ public class SessionManager : MonoBehaviour
         NetworkManager.Singleton.StartHost();
         StartGameForAllPlayers();
     }
+
+
+
+
 
     #endregion
 

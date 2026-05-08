@@ -21,6 +21,8 @@ public class SessionUIManager : MonoBehaviour
     [SerializeField] private Button leaveButton;
     [SerializeField] private Button joinButton;
 
+    [SerializeField] private Button startGameButton;
+
     [Header("Settings Menu")]
     [SerializeField] private GameObject settingsPanel;
     [SerializeField] private Button closeButton;
@@ -32,6 +34,17 @@ public class SessionUIManager : MonoBehaviour
     [Header("Overlays")]
     [SerializeField] private GameObject loadingOverlay;
 
+    public static SessionUIManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
 
     private void Start()
     {
@@ -145,6 +158,7 @@ public class SessionUIManager : MonoBehaviour
     private void OnClientCountChanged(ulong clientId)
     {
         UpdateLeaveButtonVisibility();
+        UpdateStartButtonVisibility();
     }
 
     private void UpdateLeaveButtonVisibility()
@@ -152,16 +166,36 @@ public class SessionUIManager : MonoBehaviour
         if (leaveButton == null) return;
 
         bool isHost = SessionManager.Instance != null && SessionManager.Instance.IsHost;
-        int playerCount = NetworkManager.Singleton?.ConnectedClients?.Count ?? 1;
 
         if (isHost)
         {
-            leaveButton.gameObject.SetActive(playerCount > 1);
+            leaveButton.gameObject.SetActive(GetPlayerCount() > 1);
         }
         else
         {
             leaveButton.gameObject.SetActive(true);
         }
+    }
+
+    private void UpdateStartButtonVisibility()
+    {
+        if (leaveButton == null) return;
+
+        bool isHost = SessionManager.Instance != null && SessionManager.Instance.IsHost;
+
+        if (isHost)
+        {
+            startGameButton.gameObject.SetActive(true);
+        }
+        else
+        {
+            startGameButton.gameObject.SetActive(false);
+        }
+    }
+
+    private int GetPlayerCount()
+    {
+        return NetworkManager.Singleton?.ConnectedClients?.Count ?? 1;
     }
 
     private void HandleSessionChanged(ISession session)
@@ -171,6 +205,7 @@ public class SessionUIManager : MonoBehaviour
             ClearSessionCode();
             ShowLoading(false);
             UpdateLeaveButtonVisibility();
+            UpdateStartButtonVisibility();
             return;
         }
 
@@ -179,6 +214,7 @@ public class SessionUIManager : MonoBehaviour
         UpdateSessionCode(session);
         ShowLoading(false);
         UpdateLeaveButtonVisibility();
+        UpdateStartButtonVisibility();
 
         bool isHost = SessionManager.Instance != null && SessionManager.Instance.IsHost;
 

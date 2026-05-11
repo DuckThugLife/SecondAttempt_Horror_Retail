@@ -4,8 +4,9 @@ public class LobbyMenuState : BaseUIState
 
     public override void Enter()
     {
-        base.Enter(); // Movement disabled via BaseUIState
         UIManager.Instance.SessionUIManager.ShowLobbyUI();
+        base.Enter(); // Movement disabled via BaseUIState
+        
     }
 
     public override void Exit()

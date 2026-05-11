@@ -39,6 +39,11 @@ public class PlayerStateMachine : NetworkBehaviour
             
             ChangeState(LobbyState);
 
+            // subscribing to the scene change event, this is to keep track of the scene after the inital state being set.
+            if (NetworkManager.Singleton != null)
+            {
+                NetworkManager.Singleton.SceneManager.OnSceneEvent += HandleSceneEvent;
+            }
             Debug.Log($"PlayerStateMachine: Spawned - Host: {IsHost}, Owner: {IsOwner}");
 
             // Tell VoiceManager we're ready
@@ -162,5 +167,26 @@ public class PlayerStateMachine : NetworkBehaviour
     public void OpenLobbyMenu()
     {
         PushState(LobbyMenuState);
+    }
+
+    private void HandleSceneEvent(SceneEvent sceneEvent)
+    {
+        // Trigger whenever a new scene finishes loading
+        if (sceneEvent.SceneEventType == SceneEventType.LoadComplete)
+        {
+            UpdateStateBasedOnScene(sceneEvent.SceneName);
+        }
+    }
+
+    private void UpdateStateBasedOnScene(string sceneName)
+    {
+        if (sceneName == "GameScene")
+        {
+            ChangeState(GameState);
+        }
+        else if (sceneName == "LobbyScene")
+        {
+            ChangeState(LobbyState);
+        }
     }
 }

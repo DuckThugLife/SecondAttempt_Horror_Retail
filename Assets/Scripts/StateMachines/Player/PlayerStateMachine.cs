@@ -36,6 +36,7 @@ public class PlayerStateMachine : NetworkBehaviour
         if (IsOwner)
         {
             LocalInstance = this;
+            
             ChangeState(LobbyState);
 
             Debug.Log($"PlayerStateMachine: Spawned - Host: {IsHost}, Owner: {IsOwner}");
@@ -102,13 +103,20 @@ public class PlayerStateMachine : NetworkBehaviour
 
     public void PopState()
     {
-        if (_stateStack.Count <= 1) return;
+        if (_stateStack.Count <= 1)
+        {
+            Debug.LogWarning("StateMachine: Cannot pop the last state!");
+            return;
+        }
 
-        var current = _stateStack.Pop();
-        current.Exit();
+        PlayerState stateToExit = _stateStack.Pop();
+        stateToExit.Exit();
 
-        _stateStack.Peek().Enter();
-        Debug.Log($"Popped state, current: {_stateStack.Peek().GetType().Name}");
+        if (_stateStack.Count > 0)
+        {
+            _stateStack.Peek().Enter();
+            Debug.Log($"Popped {stateToExit.GetType().Name}. Current top: {_stateStack.Peek().GetType().Name}");
+        }
     }
 
     public void ChangeState(PlayerState newState)

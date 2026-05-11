@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Threading.Tasks;
 using Unity.Netcode;
+using UnityEngine.SceneManagement;
 
 public class SessionUIManager : MonoBehaviour
 {
@@ -60,6 +61,7 @@ public class SessionUIManager : MonoBehaviour
             settingsPanel.SetActive(false);
     }
 
+   
     private async void OnEnable()
     {
         Debug.Log($"SessionUIManager OnEnable - SessionManager.Instance exists: {SessionManager.Instance != null}");
@@ -80,6 +82,35 @@ public class SessionUIManager : MonoBehaviour
             await WaitForSessionManager();
         }
     }
+
+    private void OnDestroy()
+    {
+
+        if (saveNameChangeButton != null)
+            saveNameChangeButton.onClick.RemoveListener(OnChangeNameClicked);
+
+        if (closeButton != null)
+            closeButton.onClick.RemoveListener(CloseSettings);
+
+        if (SessionManager.Instance != null)
+        {
+            SessionManager.Instance.OnSessionChanged -= HandleSessionChanged;
+            SessionManager.Instance.OnBusyChanged -= HandleBusyChanged;
+        }
+
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientCountChanged;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientCountChanged;
+        }
+    }
+
+    private void SubscribeToEvents()
+    {
+        SessionManager.Instance.OnSessionChanged += HandleSessionChanged;
+        SessionManager.Instance.OnBusyChanged += HandleBusyChanged;
+    }
+   
 
 
     public void OpenSettings()
@@ -134,26 +165,7 @@ public class SessionUIManager : MonoBehaviour
         Debug.LogError("Failed to find SessionManager after timeout!");
     }
 
-    private void SubscribeToEvents()
-    {
-        SessionManager.Instance.OnSessionChanged += HandleSessionChanged;
-        SessionManager.Instance.OnBusyChanged += HandleBusyChanged;
-    }
 
-    private void OnDestroy()
-    {
-        if (SessionManager.Instance != null)
-        {
-            SessionManager.Instance.OnSessionChanged -= HandleSessionChanged;
-            SessionManager.Instance.OnBusyChanged -= HandleBusyChanged;
-        }
-
-        if (NetworkManager.Singleton != null)
-        {
-            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientCountChanged;
-            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientCountChanged;
-        }
-    }
 
     private void OnClientCountChanged(ulong clientId)
     {

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using UnityEngine.InputSystem;
 
 public abstract class BaseUIState : PlayerState
@@ -20,10 +21,12 @@ public abstract class BaseUIState : PlayerState
     {
         if (stateMachine.PlayerInputHandler.LastKeyPressed == Key.Escape)
         {
+            UnityEngine.Debug.Log("Escape key pressed while in BaseUIState");
+            stateMachine.PlayerInputHandler.ResetLastKey(); // making sure the old key is cleared before
+
             OnEscapePressed();
-            stateMachine.PlayerInputHandler.ResetLastKey();
         }
     }
 
-    protected abstract void OnEscapePressed();
+    protected virtual void OnEscapePressed() => stateMachine.PopState();
 }

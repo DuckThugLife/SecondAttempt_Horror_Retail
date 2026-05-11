@@ -22,7 +22,7 @@ public class JoinBoard : MonoBehaviour, IInteractable, IHoverable
     {
         if (!_isHovered) return;
 
-        // Just change the state - let the state machine handle ALL UI
-        interactor.playerStateMachine.ChangeState(interactor.playerStateMachine.LobbyMenuState);
+        // Just PUSH the state - let the state machine handle ALL UI (God i gotta stop changing states if im using layered states)
+        interactor.playerStateMachine.PushState(interactor.playerStateMachine.LobbyMenuState);
     }
 }

@@ -173,25 +173,36 @@ public class SessionUIManager : MonoBehaviour
     {
         if (leaveButton == null) return;
 
-        bool isHost = NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
+        var netManager = NetworkManager.Singleton;
+        if (netManager == null) return;
 
-        // 1. If you're a client, you're never trapped.
+        // Get the current scene index
+        int sceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
+
+        // indexes
+        const int LOBBY_SCENE_INDEX = 1;
+
+        bool isHost = netManager.IsHost;
+        int playerCount = netManager.ConnectedClientsIds.Count;
+
         if (!isHost)
         {
+            // Clients can ALWAYS leave.
             leaveButton.gameObject.SetActive(true);
-            return;
-        }
-
-        // 2. If you're the Host, check the scene and player count
-        bool isGameScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "GameScene";
-
-        if (isGameScene)
-        {
-            leaveButton.gameObject.SetActive(true); // Host can always end the game
         }
         else
         {
-            leaveButton.gameObject.SetActive(GetPlayerCount() > 1); // Lobby restriction
+            // HOST LOGIC:
+            // the Host must ALWAYS have the leave button while in game.
+            if (sceneIndex != LOBBY_SCENE_INDEX)
+            {
+                leaveButton.gameObject.SetActive(true);
+            }
+            else
+            {
+                // We are in the Lobby: Only hide if the Host is alone.
+                leaveButton.gameObject.SetActive(playerCount > 1);
+            }
         }
     }
 

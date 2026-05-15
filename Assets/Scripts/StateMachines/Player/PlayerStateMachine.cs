@@ -153,7 +153,7 @@ public class PlayerStateMachine : NetworkBehaviour
 
         _stateStack.Push(newState);
         newState.Enter();
-        Debug.Log($"Changed to state: {newState.GetType().Name}");
+        Debug.Log($"Player {OwnerClientId} Changed to state: {newState.GetType().Name}");
     }
 
     public PlayerState GetCurrentState() => CurrentState;
@@ -193,10 +193,17 @@ public class PlayerStateMachine : NetworkBehaviour
 
     private void HandleSceneEvent(SceneEvent sceneEvent)
     {
-        // Trigger whenever a new scene finishes loading
+        // should care about the local machine
+        if (!IsOwner) return;
+
         if (sceneEvent.SceneEventType == SceneEventType.LoadComplete)
         {
-            UpdateStateBasedOnScene(sceneEvent.SceneName);
+            // Only update my state if the scene load that 
+            // just finished was for ME (the local player).
+            if (sceneEvent.ClientId == NetworkManager.Singleton.LocalClientId)
+            {
+                UpdateStateBasedOnScene(sceneEvent.SceneName);
+            }
         }
     }
 

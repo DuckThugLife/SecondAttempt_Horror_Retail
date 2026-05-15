@@ -5,7 +5,6 @@ using Unity.Netcode;
 using Unity.Services.Authentication;
 using Unity.Services.Multiplayer;
 using Unity.VisualScripting;
-using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 

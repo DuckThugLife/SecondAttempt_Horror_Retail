@@ -193,17 +193,14 @@ public class PlayerStateMachine : NetworkBehaviour
 
     private void HandleSceneEvent(SceneEvent sceneEvent)
     {
-        // should care about the local machine
-        if (!IsOwner) return;
+        //  Only the local player object should handle its own scene transitions
+        //  And only react if the event is actually about MY client connection
+        if (!IsOwner || sceneEvent.ClientId != NetworkManager.Singleton.LocalClientId)
+            return;
 
         if (sceneEvent.SceneEventType == SceneEventType.LoadComplete)
         {
-            // Only update my state if the scene load that 
-            // just finished was for ME (the local player).
-            if (sceneEvent.ClientId == NetworkManager.Singleton.LocalClientId)
-            {
-                UpdateStateBasedOnScene(sceneEvent.SceneName);
-            }
+            UpdateStateBasedOnScene(sceneEvent.SceneName);
         }
     }
 

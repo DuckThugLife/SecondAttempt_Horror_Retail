@@ -208,26 +208,24 @@ public class SessionUIManager : MonoBehaviour
 
     private void UpdateStartButtonVisibility()
     {
-        if (leaveButton == null) return;
+        if (startGameButton == null) return;
 
+        // Check if we are the host
         bool isHost = SessionManager.Instance != null && SessionManager.Instance.IsHost;
-        bool isInGame = PlayerStateMachine.LocalInstance.GetCurrentState() is PlayerGameState;
-        if (isHost)
+
+        // Start button should ONLY exist in the Lobby (Scene 1)
+        int sceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
+        bool isLobby = (sceneIndex == 1);
+
+        if (isHost && isLobby)
         {
-            // If we are in the actual game, Host MUST see the leave button to quit, same thing for other players, they gotta be able to leave.
-            if (isInGame)
-            {
-                leaveButton.gameObject.SetActive(true);
-            }
-            else // If we are in the lobby, use the "more than 1 player" rule, no point in leaving a lobby when you are by yourself.
-            {
-                leaveButton.gameObject.SetActive(GetPlayerCount() > 1);
-            }
+            // Host in Lobby: Show start button if there are enough players
+            startGameButton.gameObject.SetActive(true);
         }
         else
         {
-            // Clients can always leave
-            leaveButton.gameObject.SetActive(true);
+            // Clients, or Host during actual gameplay: NO start button.
+            startGameButton.gameObject.SetActive(false);
         }
     }
 

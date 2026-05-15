@@ -4,8 +4,17 @@ public class PlayerChatState : BaseUIState
 
     public override void Enter()
     {
-        base.Enter(); // Locks movement, unlocks cursor
-        MessageController.Instance.OpenChatInput();
+        base.Enter();
+
+        if (MessageController.Instance != null)
+        {
+            UnityEngine.Debug.Log("ChatState: Entering and calling OpenChatInput");
+            MessageController.Instance.OpenChatInput();
+        }
+        else
+        {
+            UnityEngine.Debug.LogError("ChatState: MessageController.Instance is MISSING!");
+        }
     }
 
     public override void Exit()

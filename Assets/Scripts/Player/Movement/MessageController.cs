@@ -58,35 +58,9 @@ public class MessageController : MonoBehaviour
         chatInput.onDeselect.AddListener(delegate { Clear(); });
     }
 
-    private void Update()
-    {
-        if (localPlayer == null) return;
-
-        // Open chat input with Enter
-        if (localPlayer.PlayerInputHandler.LastKeyPressed == Key.Enter)
-        {
-            if (!_isInputOpen)
-            {
-                OpenChatInput();
-            }
-            localPlayer.PlayerInputHandler.ResetLastKey();
-        }
-
-        // Close chat input with Escape
-        if (_isInputOpen && localPlayer.PlayerInputHandler.LastKeyPressed == Key.Escape)
-        {
-            CloseChatInput();
-            localPlayer.PlayerInputHandler.ResetLastKey();
-        }
-    }
 
     public void OpenChatInput()
     {
-        // Don't open chat if any UI menu is open OR settings is open
-        if (PlayerStateMachine.LocalInstance?.CurrentState is BaseUIState)
-            return;
-
-
         _isInputOpen = true;
         chatInputPanel.SetActive(true);
         chatInput.interactable = true;
@@ -106,9 +80,6 @@ public class MessageController : MonoBehaviour
         _isInputOpen = false;
         chatInputPanel.SetActive(false);
         chatInput.interactable = false;
-
-        // Re-enable player movement
-        localPlayer?.SetPlayerEnabled(true);
 
         // Start fade after typing
         if (chatLogCanvasGroup != null)
@@ -177,8 +148,8 @@ public class MessageController : MonoBehaviour
         // Clear the Enter key press to prevent immediate reopening
         localPlayer?.PlayerInputHandler.ResetLastKey();
 
+        PlayerStateMachine.LocalInstance.PopState();
         Clear();
-        CloseChatInput();
     }
 
     public void AddNewMessage(string message)

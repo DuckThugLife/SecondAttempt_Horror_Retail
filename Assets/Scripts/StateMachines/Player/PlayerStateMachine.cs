@@ -20,6 +20,7 @@ public class PlayerStateMachine : NetworkBehaviour
     public LobbyMenuState LobbyMenuState { get; private set; }
     public PlayerLoadingState LoadingState { get; private set; }
     public PlayerSettingsState SettingsState { get; private set; }
+    public PlayerChatState ChatState { get; private set; }
 
     public PlayerState CurrentState => _stateStack.Count > 0 ? _stateStack.Peek() : null;
 
@@ -31,6 +32,7 @@ public class PlayerStateMachine : NetworkBehaviour
         LobbyMenuState = new LobbyMenuState(this);
         LoadingState = new PlayerLoadingState(this);
         SettingsState = new PlayerSettingsState(this);
+        ChatState = new PlayerChatState(this);
     }
 
     public override void OnNetworkSpawn()
@@ -89,17 +91,27 @@ public class PlayerStateMachine : NetworkBehaviour
 
         CurrentState?.Tick();
 
+        // Handle ESCAPE (Settings / Back)
         if (PlayerInputHandler.LastKeyPressed == Key.Escape)
         {
-
             if (CurrentState is BaseUIState)
             {
                 PopState();
             }
             else
             {
-                // If we are just playing, push settings onto the stack
                 PushState(SettingsState);
+            }
+            PlayerInputHandler.ResetLastKey();
+        }
+
+        // Handle ENTER (Chat)
+        else if (PlayerInputHandler.LastKeyPressed == Key.Enter)
+        {
+            // Only open chat if we aren't already in a UI (Settings/Lobby)
+            if (!(CurrentState is BaseUIState))
+            {
+                PushState(ChatState);
             }
 
             PlayerInputHandler.ResetLastKey();

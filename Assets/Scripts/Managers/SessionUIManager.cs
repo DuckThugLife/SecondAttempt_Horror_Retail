@@ -51,7 +51,7 @@ public class SessionUIManager : MonoBehaviour
     {
         // Wire up buttons if not done in inspector
         if (closeButton != null)
-            closeButton.onClick.AddListener(CloseSettings);
+            closeButton.onClick.AddListener(OnCloseSettingsClicked);
 
         if (saveNameChangeButton != null)
             saveNameChangeButton.onClick.AddListener(OnChangeNameClicked);
@@ -90,7 +90,7 @@ public class SessionUIManager : MonoBehaviour
             saveNameChangeButton.onClick.RemoveListener(OnChangeNameClicked);
 
         if (closeButton != null)
-            closeButton.onClick.RemoveListener(CloseSettings);
+            closeButton.onClick.RemoveListener(OnCloseSettingsClicked);
 
         if (SessionManager.Instance != null)
         {
@@ -122,6 +122,16 @@ public class SessionUIManager : MonoBehaviour
     {
         settingsPanel.SetActive(false);
     }
+
+    public void OnCloseSettingsClicked()
+    {
+        // Check if we are actually in the Settings State before popping
+        if (PlayerStateMachine.LocalInstance.CurrentState is PlayerSettingsState)
+        {
+            PlayerStateMachine.LocalInstance.PopState();
+        }
+    }
+
 
 
     private async Task WaitForSessionManager()
@@ -159,19 +169,29 @@ public class SessionUIManager : MonoBehaviour
         UpdateStartButtonVisibility();
     }
 
-    private void UpdateLeaveButtonVisibility()
+    public void UpdateLeaveButtonVisibility()
     {
         if (leaveButton == null) return;
 
-        bool isHost = SessionManager.Instance != null && SessionManager.Instance.IsHost;
+        bool isHost = NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
 
-        if (isHost)
+        // 1. If you're a client, you're never trapped.
+        if (!isHost)
         {
-            leaveButton.gameObject.SetActive(GetPlayerCount() > 1 );
+            leaveButton.gameObject.SetActive(true);
+            return;
+        }
+
+        // 2. If you're the Host, check the scene and player count
+        bool isGameScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "GameScene";
+
+        if (isGameScene)
+        {
+            leaveButton.gameObject.SetActive(true); // Host can always end the game
         }
         else
         {
-            leaveButton.gameObject.SetActive(true);
+            leaveButton.gameObject.SetActive(GetPlayerCount() > 1); // Lobby restriction
         }
     }
 

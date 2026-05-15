@@ -5,6 +5,7 @@ public class PlayerSettingsState : BaseUIState
     public override void Enter()
     {
         base.Enter(); // handles cursor/movement disabling
+        SessionUIManager.Instance.UpdateLeaveButtonVisibility();
         UIManager.Instance.SessionUIManager.OpenSettings();
     }
 

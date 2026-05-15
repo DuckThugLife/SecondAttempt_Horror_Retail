@@ -80,14 +80,12 @@ public class MessageController : MonoBehaviour
         }
     }
 
-    private void OpenChatInput()
+    public void OpenChatInput()
     {
         // Don't open chat if any UI menu is open OR settings is open
         if (PlayerStateMachine.LocalInstance?.CurrentState is BaseUIState)
             return;
 
-        if (UIManager.Instance.SessionUIManager.IsSettingsOpen())
-            return;
 
         _isInputOpen = true;
         chatInputPanel.SetActive(true);
@@ -103,7 +101,7 @@ public class MessageController : MonoBehaviour
         }
     }
 
-    private void CloseChatInput()
+    public void CloseChatInput()
     {
         _isInputOpen = false;
         chatInputPanel.SetActive(false);

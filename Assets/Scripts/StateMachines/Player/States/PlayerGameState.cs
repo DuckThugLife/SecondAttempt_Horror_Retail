@@ -4,8 +4,10 @@ public class PlayerGameState : PlayerState
 
     public override void Enter()
     {
-        stateMachine.PlayerInputHandler.SetMovementEnabled(true); // only movement enabled
+        stateMachine.PlayerInputHandler.SetMovementEnabled(true);
         stateMachine.LockCursor();
+
+        UIManager.Instance.SessionUIManager.HideLobbyUI();
     }
 
     public override void Exit()

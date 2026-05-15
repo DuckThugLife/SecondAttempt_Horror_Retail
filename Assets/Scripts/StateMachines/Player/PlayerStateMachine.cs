@@ -19,6 +19,7 @@ public class PlayerStateMachine : NetworkBehaviour
     public PlayerDeadState DeadState { get; private set; }
     public LobbyMenuState LobbyMenuState { get; private set; }
     public PlayerLoadingState LoadingState { get; private set; }
+    public PlayerSettingsState SettingsState { get; private set; }
 
     public PlayerState CurrentState => _stateStack.Count > 0 ? _stateStack.Peek() : null;
 
@@ -29,6 +30,7 @@ public class PlayerStateMachine : NetworkBehaviour
         DeadState = new PlayerDeadState(this);
         LobbyMenuState = new LobbyMenuState(this);
         LoadingState = new PlayerLoadingState(this);
+        SettingsState = new PlayerSettingsState(this);
     }
 
     public override void OnNetworkSpawn()
@@ -85,13 +87,21 @@ public class PlayerStateMachine : NetworkBehaviour
     {
         if (!IsOwner) return;
 
-        // Let current state handle its own input
         CurrentState?.Tick();
 
-        // Global ESC only if not in any UI state
-        if (PlayerInputHandler.LastKeyPressed == Key.Escape && !(CurrentState is BaseUIState))
+        if (PlayerInputHandler.LastKeyPressed == Key.Escape)
         {
-            UIManager.Instance.SessionUIManager.ToggleSettings();
+
+            if (CurrentState is BaseUIState)
+            {
+                PopState();
+            }
+            else
+            {
+                // If we are just playing, push settings onto the stack
+                PushState(SettingsState);
+            }
+
             PlayerInputHandler.ResetLastKey();
         }
     }

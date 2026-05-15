@@ -116,27 +116,13 @@ public class SessionUIManager : MonoBehaviour
     public void OpenSettings()
     {
         settingsPanel.SetActive(true);
-        UIManager.Instance.SetUIEnabled(true); 
     }
 
     public void CloseSettings()
     {
         settingsPanel.SetActive(false);
-        UIManager.Instance.SetUIEnabled(false);
     }
 
-    public void ToggleSettings()
-    {
-        if (settingsPanel.activeSelf)
-            CloseSettings();
-        else
-            OpenSettings();
-    }
-
-    public bool IsSettingsOpen()
-    {
-        return settingsPanel != null && settingsPanel.activeSelf;
-    }
 
     private async Task WaitForSessionManager()
     {
@@ -181,7 +167,7 @@ public class SessionUIManager : MonoBehaviour
 
         if (isHost)
         {
-            leaveButton.gameObject.SetActive(GetPlayerCount() > 1);
+            leaveButton.gameObject.SetActive(GetPlayerCount() > 1 );
         }
         else
         {
@@ -194,14 +180,23 @@ public class SessionUIManager : MonoBehaviour
         if (leaveButton == null) return;
 
         bool isHost = SessionManager.Instance != null && SessionManager.Instance.IsHost;
-
+        bool isInGame = PlayerStateMachine.LocalInstance.GetCurrentState() is PlayerGameState;
         if (isHost)
         {
-            startGameButton.gameObject.SetActive(true);
+            // If we are in the actual game, Host MUST see the leave button to quit, same thing for other players, they gotta be able to leave.
+            if (isInGame)
+            {
+                leaveButton.gameObject.SetActive(true);
+            }
+            else // If we are in the lobby, use the "more than 1 player" rule, no point in leaving a lobby when you are by yourself.
+            {
+                leaveButton.gameObject.SetActive(GetPlayerCount() > 1);
+            }
         }
         else
         {
-            startGameButton.gameObject.SetActive(false);
+            // Clients can always leave
+            leaveButton.gameObject.SetActive(true);
         }
     }
 

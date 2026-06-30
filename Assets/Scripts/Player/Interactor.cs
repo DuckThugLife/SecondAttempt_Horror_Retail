@@ -5,7 +5,7 @@ public class Interactor : MonoBehaviour
 {
     [Header("Classes")]
     [SerializeField] public PlayerStateMachine playerStateMachine;
-    [SerializeField] public PlayerInputHandler playerInputHandler;    
+    [SerializeField] public PlayerInputHandler playerInputHandler;
     [SerializeField] private Camera playerCamera;
     [SerializeField] public Transform objectHoldPoint;
     public GameObject heldObject { get; private set; }
@@ -35,14 +35,22 @@ public class Interactor : MonoBehaviour
             playerInputHandler.ResetLastKey();
         }
 
-        if (playerInputHandler.LeftClickPressed) // Don't interact while leaving
+        if (heldObject != null && heldObject.TryGetComponent<IInteractable>(out var interactable) && playerInputHandler.LeftClickPressed)
+        {
+            interactable.Use(this);
+            playerInputHandler.ResetLeftClick();
+        }
+        else if (playerInputHandler.LeftClickPressed)
         {
             _currentInteractable?.Use(this);
-
             playerInputHandler.ResetLeftClick();
-            playerInputHandler.ResetLastKey();
         }
     }
+
+      
+
+            
+
 
     private void HandleHover()
     {

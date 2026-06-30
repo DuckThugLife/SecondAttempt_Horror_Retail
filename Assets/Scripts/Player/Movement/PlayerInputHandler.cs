@@ -7,6 +7,7 @@ public class PlayerInputHandler : MonoBehaviour
     public Vector2 Move { get; private set; }
     public Vector2 Look { get; private set; }
     public bool JumpPressed { get; private set; }
+    public bool LeftClickPressed { get; private set; }
     public Key LastKeyPressed { get; private set; }
 
     private bool movementEnabled = true;
@@ -56,6 +57,16 @@ public class PlayerInputHandler : MonoBehaviour
         if (context.performed)
             LastKeyPressed = Key.E;
     }
+    public void OnLeftClick(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+            LeftClickPressed = context.performed;
+    }
 
     public void ResetLastKey() => LastKeyPressed = Key.None;
+
+    public void ResetLeftClick()
+    {
+        LeftClickPressed = false;
+    }
 }

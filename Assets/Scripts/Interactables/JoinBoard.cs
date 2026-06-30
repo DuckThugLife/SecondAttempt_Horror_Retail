@@ -25,4 +25,9 @@ public class JoinBoard : MonoBehaviour, IInteractable, IHoverable
         // Just PUSH the state - let the state machine handle ALL UI (God i gotta stop changing states if im using layered states)
         interactor.playerStateMachine.PushState(interactor.playerStateMachine.LobbyMenuState);
     }
+
+    public void Use(Interactor interactor)
+    {
+
+    }
 }

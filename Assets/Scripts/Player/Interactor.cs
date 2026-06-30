@@ -5,10 +5,13 @@ public class Interactor : MonoBehaviour
 {
     [Header("Classes")]
     [SerializeField] public PlayerStateMachine playerStateMachine;
-    [SerializeField] public PlayerInputHandler playerInputHandler;
+    [SerializeField] public PlayerInputHandler playerInputHandler;    
     [SerializeField] private Camera playerCamera;
+    [SerializeField] public Transform objectHoldPoint;
+    public GameObject heldObject { get; private set; }
 
     [Header("Settings")]
+    public float throwStrength { get; private set; } = 10f;
     [SerializeField] private float interactDistance = 3f;
     [SerializeField] private LayerMask interactMask;
 
@@ -29,6 +32,14 @@ public class Interactor : MonoBehaviour
         if (playerInputHandler.LastKeyPressed == Key.E && !_isLeaving) // Don't interact while leaving
         {
             _currentInteractable?.Interact(this);
+            playerInputHandler.ResetLastKey();
+        }
+
+        if (playerInputHandler.LeftClickPressed) // Don't interact while leaving
+        {
+            _currentInteractable?.Use(this);
+
+            playerInputHandler.ResetLeftClick();
             playerInputHandler.ResetLastKey();
         }
     }
@@ -74,10 +85,20 @@ public class Interactor : MonoBehaviour
         _currentInteractable = null;
     }
 
+
     // Call this before leaving to prevent re-hover
     public void SetLeaving()
     {
         _isLeaving = true;
         ClearHover();
+    }
+
+    public void AddHeldObject(GameObject _heldObject)
+    {
+        heldObject = _heldObject;
+    }
+    public void RemoveHeldObject()
+    {
+        heldObject = null;
     }
 }

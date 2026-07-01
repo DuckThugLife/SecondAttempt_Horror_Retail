@@ -600,7 +600,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 3917378523
+  GlobalObjectIdHash: 3285238590
   InScenePlacedSourceGlobalObjectIdHash: 3285238590
   DeferredDespawnTick: 0
   Ownership: 1
@@ -963,7 +963,7 @@ MonoBehaviour:
   playerInputHandler: {fileID: 1160765340064647956}
   playerCamera: {fileID: 8973406926762114327}
   objectHoldPoint: {fileID: 8666925450105205222}
-  heldObject: {fileID: 0}
+  <throwStrength>k__BackingField: 500
   interactDistance: 3
   interactMask:
     serializedVersion: 2

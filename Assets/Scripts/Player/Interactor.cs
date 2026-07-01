@@ -11,7 +11,8 @@ public class Interactor : MonoBehaviour
     public GameObject heldObject { get; private set; }
 
     [Header("Settings")]
-    public float throwStrength { get; private set; } = 10f;
+
+    [field: SerializeField] public float throwStrength { get; private set; } = 10f;
     [SerializeField] private float interactDistance = 3f;
     [SerializeField] private LayerMask interactMask;
 

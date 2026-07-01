@@ -2,9 +2,16 @@ using UnityEngine;
 
 public class ThrowableObject : MonoBehaviour, IInteractable, IHoverable
 {
+    [field: SerializeField] public MeshRenderer modelMeshRenderer { get; private set; }
     private Transform originalParent;
+    private Rigidbody rb;
     private bool _isHovered;
     private bool _isHeld;
+
+    private void Awake()
+    {
+        rb = gameObject.GetComponent<Rigidbody>();
+    }
 
     public void HoverEnter(Interactor interactor)
     {
@@ -22,16 +29,7 @@ public class ThrowableObject : MonoBehaviour, IInteractable, IHoverable
 
     public void Interact(Interactor interactor)
     {
-        if (!_isHovered) return;
-        if (_isHeld) return;
-        if (interactor.heldObject != null) return;
-
-        interactor.AddHeldObject(gameObject);
-        _isHeld = true;
-
-        originalParent = gameObject.transform.parent;
-        gameObject.transform.position = interactor.objectHoldPoint.position;
-        gameObject.transform.SetParent(interactor.objectHoldPoint, true);
+        PickupObject(interactor);
     }
 
     public void Use(Interactor interactor)
@@ -39,23 +37,57 @@ public class ThrowableObject : MonoBehaviour, IInteractable, IHoverable
         ThrowObject(interactor);
     }
 
+    private void PickupObject(Interactor interactor)
+    {
+        if (!_isHovered) return;
+        if (_isHeld) return;
+        if (interactor.heldObject != null) return;
+        _isHeld = true;
+        originalParent = gameObject.transform.parent;
+
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+            rb.detectCollisions = true; 
+        }
+
+
+        GetBoundsAndOffset(interactor);
+        interactor.AddHeldObject(gameObject);
+        
+    }
+
+
     private void ThrowObject(Interactor interactor)
     {
-        if (gameObject.GetComponent<Rigidbody>() == null) return;
+        if (rb == null) return;
         if (interactor == null) return;
 
         gameObject.transform.SetParent(originalParent);
 
-        Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+            rb.detectCollisions = true;
+        }
 
         Debug.Log("Throw object");
         Debug.Log(interactor.gameObject);
         Debug.Log(interactor.throwStrength);
-        rb.AddRelativeForce(interactor.gameObject.transform.forward * interactor.throwStrength);
+        rb.AddForce(interactor.objectHoldPoint.transform.forward * interactor.throwStrength);
 
         _isHeld = false;
         interactor.RemoveHeldObject();
     }
 
-  
+    private void GetBoundsAndOffset(Interactor interactor)
+    {
+        transform.SetParent(interactor.objectHoldPoint, false);
+        Bounds myBounds = modelMeshRenderer.bounds;
+        Vector3 offset = new Vector3(myBounds.extents.x, myBounds.extents.y, myBounds.extents.z);
+
+        transform.localPosition = offset;
+    }
+
+
 }

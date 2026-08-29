@@ -963,7 +963,7 @@ MonoBehaviour:
   playerInputHandler: {fileID: 1160765340064647956}
   playerCamera: {fileID: 8973406926762114327}
   objectHoldPoint: {fileID: 8666925450105205222}
-  <throwStrength>k__BackingField: 500
+  <throwStrength>k__BackingField: 5
   interactDistance: 3
   interactMask:
     serializedVersion: 2
